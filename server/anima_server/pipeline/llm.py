@@ -122,3 +122,4 @@ async def llm_stage(session: Any) -> None:
             await session.token_q.put((turn, END_OF_RESPONSE))
 
         session.history = trim_history(session.history, session.cfg.history_turns)
+

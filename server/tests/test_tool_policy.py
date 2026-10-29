@@ -70,3 +70,4 @@ def test_rate_limit_enforced():
     v = policy.check(tool, {})
     assert not v.ok
     assert "rate limit" in v.reason.lower()
+

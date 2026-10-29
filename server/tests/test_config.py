@@ -45,3 +45,4 @@ def test_llm_max_tokens_too_large():
     cfg = Config(llm_max_tokens=350)
     with pytest.raises(AssertionError, match="llm_max_tokens .* must be <= 300"):
         validate(cfg)
+

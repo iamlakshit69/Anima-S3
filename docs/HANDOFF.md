@@ -130,18 +130,53 @@ cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 100% pa
 ### Blocked on
 - None. Ready for Phase 2.
 
+## Entry 004 — 2026-10-29 — Phase 2 Completion (Firmware Audio Loop, PTT, LED UI, Host Tests)
+
+### Done
+- Implemented complete C++ firmware package for ESP32-S3:
+  - `config.h`: single source of truth for firmware constants.
+  - `boards/breadboard_s3/pins.h` & `boards/board.h`: hardware abstraction matching `docs/HARDWARE.md` (INMP441 on GPIO 4,5,6; MAX98357A on GPIO 7,15,16; BOOT GPIO 0; PTT GPIO 47; Status LED GPIO 48; avoiding reserved Octal PSRAM GPIO 26-37).
+  - `audio/ring_buffer.h`: lock-free SPSC circular ring buffer supporting pre-roll discard and zero dynamic heap allocations in audio loops.
+  - `audio/jitter_buffer.h`/`.cc`: 24 kHz playback buffer with 200ms prebuffer threshold, underrun detection, and barge-in clear.
+  - `audio/audio_io.h`/`.cc`: I2S driver for INMP441 RX (16 kHz, 32-bit slot conversion to 16-bit) and MAX98357A TX (24 kHz standard Philips), half-duplex mic muting, and speaker DMA zeroing.
+  - `audio/opus_enc.h`/`.cc` & `audio/opus_dec.h`/`.cc`: 16 kHz VOIP Opus encoder and 24 kHz Opus decoder.
+  - `audio/cues.h`/`.cc`: synthesized audio chimes (wake chime, ready, error).
+  - `sys/buttons.h`/`.cc`: debounced button handler for PTT (down/up) and BOOT (tap barge-in vs long-press provisioning).
+  - `app/events.h` & `app/state_machine.h`/`.cc`: table-driven transition engine with 21 transitions covering boot, wifi/ws reconnect, PTT turns, barge-in interrupts, and unhandled event rejection.
+  - `ui/ui.h` & `ui/led_ui.cc`: LED pattern generator (IDLE off, LISTENING solid on, THINKING slow blink, SPEAKING fast pulse, PROVISIONING double blink).
+  - `sys/diag.h`/`.cc`: self-test mode, free heap/PSRAM reporting, and microphone audio analysis (clipping & dead mic detection).
+  - `net/ws_client.h`/`.cc`: WebSocket transport with exponential backoff & 20% jitter.
+  - `app/app.h`/`.cc` & `main.cc`: application coordinator and FreeRTOS task integration.
+- Expanded C++ Host Test suite in `firmware/host_test/` (all 6 suites passing):
+  - `test_protocol_host`: wire framing and header decode.
+  - `test_ring_buffer_host`: SPSC circular wraparound, overflow, underflow, pre-roll trim.
+  - `test_jitter_buffer_host`: 200ms prebuffer threshold, underruns, barge-in clear.
+  - `test_buttons_host`: PTT down/up debounce, short tap, >3s long press.
+  - `test_state_machine_host`: all 21 table-driven transitions, barge-in, unhandled event rejection.
+  - `test_diag_host`: microphone clipping detection, silence detection, memory metrics.
+- Updated status board in `AGENTS.md` and `Notes for agents.md`: Phase 2 checked off.
+
+### Tests run
+```sh
+cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 6 passed in 0.01s (100%)
+.venv/bin/python -m pytest server/tests -v                           → 32 passed in 13.67s (100%)
+.venv/bin/python -m pytest protocol/tests -v                         → 51 passed in 0.07s (100%)
+```
+
+### Half-done or in progress
+- None. Phase 2 deliverables are 100% complete and accepted.
+
+### Blocked on
+- None. Ready for Phase 3.
+
 ### Next agent: start here
-- Start **Phase 2: Firmware audio loop (push-to-talk, LED only)**.
-- Hardware is confirmed: ESP32-S3-WROOM-1 / N16R8, INMP441 microphone, MAX98357A amplifier.
-- Target pins documented in `docs/HARDWARE.md` (avoiding GPIO 26-37 due to Octal PSRAM).
-- Firmware deliverables:
-  - Board pin configuration (`firmware/main/boards/breadboard_s3/`)
-  - I2S input (INMP441) and I2S output (MAX98357A)
-  - ESP-IDF Opus encoder (16 kHz uplink) and decoder (24 kHz downlink)
-  - WebSocket client with exponential backoff & jitter
-  - Jitter buffer (PSRAM-backed)
-  - Push-to-talk (PTT) and tap button debounce
-  - Status LED patterns (`LedUi`)
-  - Self-test mode
+- Start **Phase 3: Wake word, full state machine, reconnect drills**.
+- Review Architecture Plan section 7.10 (Wake word and front end) and section 11 (Phase 3 acceptance).
+- Deliverables for Phase 3:
+  - ESP-SR integration & model partition loading (`wake_word.h` / `wake_word.cc`)
+  - Integration of wake word model in `partitions.csv` (`model` partition at 0x620000, 4MB)
+  - Full state machine integration with reconnect drills (server-kill and router-off simulations)
+  - Measure false wake counts and test PTT fallback when wake word is disabled
+
 
 

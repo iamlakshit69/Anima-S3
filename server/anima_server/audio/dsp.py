@@ -75,3 +75,4 @@ def is_hallucination(text: str, duration_s: float) -> bool:
             if pat.search(t):
                 return True
     return False
+

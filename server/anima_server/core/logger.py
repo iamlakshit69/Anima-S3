@@ -21,3 +21,4 @@ def setup_logging(level: str = "INFO") -> None:
     # Clear existing handlers
     root.handlers.clear()
     root.addHandler(handler)
+

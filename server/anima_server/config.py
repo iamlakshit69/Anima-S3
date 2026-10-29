@@ -149,3 +149,4 @@ def load_config(env_path: Path | str | None = None) -> Config:
         speed=float(os.getenv("KOKORO_SPEED", "1.05")),
         fast_path_intents=os.getenv("FAST_PATH_INTENTS", "true").lower() in ("1", "true", "yes"),
     )
+

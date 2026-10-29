@@ -97,3 +97,4 @@ def test_endpointer_force_end(cfg):
     res = ep.force_end()
     assert res.reason == "endpoint"
     assert len(res.audio) >= 512
+

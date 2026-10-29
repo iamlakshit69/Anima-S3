@@ -40,3 +40,4 @@ class Rechunker:
     def reset(self) -> None:
         """Clears any buffered samples."""
         self._buffer = np.zeros(0, dtype=np.int16)
+

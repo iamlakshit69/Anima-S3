@@ -101,3 +101,4 @@ class Endpointer:
             self.blocks.append(rem)
         audio = np.concatenate(self.blocks) if self.blocks else np.zeros(0, dtype=np.int16)
         return EndpointResult(reason="endpoint", audio=audio)
+

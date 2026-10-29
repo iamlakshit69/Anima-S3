@@ -60,3 +60,4 @@ def test_opus_plc_on_packet_gap():
     out2 = decoder.decode(frames[2], seq=2)
     # Total samples should be 320 (concealed) + 320 (frame 2) = 640
     assert len(out2) == 640
+

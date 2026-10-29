@@ -77,3 +77,4 @@ class SileroVAD:
         rms = float(np.sqrt(np.mean(float_audio**2)))
         # Map rms 0.01 -> 0.0, 0.08+ -> 1.0
         return float(np.clip((rms - 0.01) / 0.07, 0.0, 1.0))
+

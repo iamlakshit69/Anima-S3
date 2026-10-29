@@ -87,3 +87,4 @@ def generate_error_tone(sample_rate: int = 24000, duration_s: float = 0.3, freq_
         envelope[:fade_len] = np.linspace(0, 1, fade_len)
         envelope[-fade_len:] = np.linspace(1, 0, fade_len)
     return (sine * envelope * 32767).astype(np.int16)
+

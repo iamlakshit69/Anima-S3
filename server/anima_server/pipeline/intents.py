@@ -18,3 +18,4 @@ def match(text: str, session: Any) -> Optional[Any]:
 async def run(hit: Any, session: Any, turn: int) -> None:
     """Executes a matched fast-path intent directly."""
     pass
+

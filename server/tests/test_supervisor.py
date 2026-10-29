@@ -59,3 +59,4 @@ async def test_supervisor_crash_threshold_closes_session():
     assert len(session.errors) == 1
     assert session.errors[0][0] == "E_INTERNAL"
     assert session.errors[0][2] is True  # fatal
+

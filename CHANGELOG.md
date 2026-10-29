@@ -5,6 +5,41 @@ Format: `## [Phase N] YYYY-MM-DD — brief title` followed by a bullet list.
 
 ---
 
+## [Phase 2] 2026-10-29 — Firmware audio loop (PTT, LED UI, self-test)
+
+### Added
+- **Hardware Abstraction & Pin Mapping**:
+  - `firmware/main/boards/breadboard_s3/pins.h`: Pin map verified against `docs/HARDWARE.md` for ESP32-S3 N16R8 (INMP441 on GPIO 4,5,6; MAX98357A on GPIO 7,15,16; BOOT GPIO 0; PTT GPIO 47; Status LED GPIO 48; avoiding reserved Octal PSRAM GPIO 26-37).
+  - `firmware/main/boards/board.h` & `breadboard_s3/board.cc`: Hardware abstraction interface and GPIO initializer.
+- **Audio I/O & Buffers**:
+  - `firmware/main/audio/ring_buffer.h`: Lock-free Single-Producer Single-Consumer (SPSC) circular buffer supporting pre-roll discard and zero dynamic heap allocation in audio loops.
+  - `firmware/main/audio/jitter_buffer.h`/`.cc`: 24 kHz playback jitter buffer with 200ms prebuffer threshold, underrun detection, and barge-in clear.
+  - `firmware/main/audio/audio_io.h`/`.cc`: I2S driver for INMP441 RX (16 kHz, 32-bit slot conversion to 16-bit) and MAX98357A TX (24 kHz mono standard Philips), half-duplex mic muting, and speaker DMA zeroing.
+  - `firmware/main/audio/opus_enc.h`/`.cc` & `audio/opus_dec.h`/`.cc`: 16 kHz VOIP Opus encoder and 24 kHz Opus decoder.
+  - `firmware/main/audio/cues.h`/`.cc`: Acoustic chime synthesis (wake cue, ready cue, error buzz).
+- **Control & State Machine**:
+  - `firmware/main/sys/buttons.h`/`.cc`: Debounced button handler for PTT (down/up) and BOOT (tap barge-in vs long-press provisioning).
+  - `firmware/main/app/events.h` & `app/state_machine.h`/`.cc`: Table-driven transition engine with 21 transitions covering boot, wifi/ws reconnect, PTT turns, barge-in interrupts, and unhandled event rejection.
+  - `firmware/main/ui/ui.h` & `ui/led_ui.cc`: LED pattern generator (IDLE off, LISTENING solid on, THINKING slow blink, SPEAKING fast pulse, PROVISIONING double blink).
+  - `firmware/main/sys/diag.h`/`.cc`: Self-test mode, free heap/PSRAM reporting, and microphone audio analysis (clipping & dead mic detection).
+  - `firmware/main/net/ws_client.h`/`.cc`: WebSocket transport with exponential backoff & 20% jitter.
+  - `firmware/main/app/app.h`/`.cc` & `main.cc`: Application coordinator and FreeRTOS task integration.
+- **Host Test Suite**:
+  - `test_ring_buffer_host`: Tests SPSC circular wraparound, overflow, underflow, and pre-roll trim.
+  - `test_jitter_buffer_host`: Tests 200ms prebuffer threshold, underruns, and barge-in clear.
+  - `test_buttons_host`: Tests PTT down/up debounce, short tap, and >3s long press.
+  - `test_state_machine_host`: Tests all 21 table-driven transitions, barge-in, and unhandled event rejection.
+  - `test_diag_host`: Tests microphone clipping detection, silence detection, and memory metrics.
+
+### Tests
+```sh
+cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 6 passed (100%)
+.venv/bin/python -m pytest server/tests -v                           → 32 passed (100%)
+.venv/bin/python -m pytest protocol/tests -v                         → 51 passed (100%)
+```
+
+---
+
 ## [Phase 1] 2026-10-29 — Server with fake device
 
 ### Added

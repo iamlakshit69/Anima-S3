@@ -68,3 +68,4 @@ async def test_device_proxy_timeout():
     res_str = await reg.invoke(turn=1, call=call_obj)
     res = json.loads(res_str)
     assert res["error"] == "E_TOOL_TIMEOUT"
+

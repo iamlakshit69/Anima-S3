@@ -234,3 +234,4 @@ def decode_frame(raw: bytes) -> Optional[AudioFrame]:
     except Exception as e:
         log.warning("Malformed binary frame (%d bytes): %s", len(raw), e)
         return None
+

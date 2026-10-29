@@ -40,3 +40,4 @@ class LLMProvider(Protocol):
     ) -> AsyncIterator[TextDelta | ToolCall | Done]:
         """Streams completion tokens or tool calls bound to a TurnScope."""
         ...
+

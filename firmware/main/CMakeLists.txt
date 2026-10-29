@@ -1,12 +1,32 @@
 # Main component CMakeLists.txt
 idf_component_register(
     SRCS
-        "net/protocol_gen.h"
+        "main.cc"
+        "app/app.cc"
+        "app/state_machine.cc"
+        "audio/audio_io.cc"
+        "audio/jitter_buffer.cc"
+        "audio/opus_enc.cc"
+        "audio/opus_dec.cc"
+        "audio/cues.cc"
+        "boards/breadboard_s3/board.cc"
+        "net/ws_client.cc"
+        "sys/buttons.cc"
+        "sys/settings.cc"
+        "sys/diag.cc"
+        "ui/led_ui.cc"
     INCLUDE_DIRS
         "."
+        "app"
+        "audio"
+        "boards"
         "net"
+        "sys"
+        "ui"
     REQUIRES
+        driver
+        nvs_flash
         esp_websocket_client
         cjson
+        esp_timer
 )
-

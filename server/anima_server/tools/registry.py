@@ -161,3 +161,4 @@ class ToolRegistry:
             return json.dumps({"error": "E_TOOL_TIMEOUT"})
         finally:
             self.pending_device_calls.pop(call.id, None)
+

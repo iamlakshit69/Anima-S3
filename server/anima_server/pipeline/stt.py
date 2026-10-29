@@ -73,3 +73,4 @@ async def stt_stage(session: Any) -> None:
         # Emit SttMsg to device for subtitle display
         await session.send(SttMsg(turn=turn, text=text))
         await session.llm_q.put((turn, text))
+

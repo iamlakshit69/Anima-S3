@@ -114,3 +114,4 @@ class OpenAICompatProvider:
             yield Done(reason="stop")
         finally:
             await resp.close()
+

@@ -17,3 +17,4 @@ async def time_now() -> Dict[str, Any]:
         "date": now_local.strftime("%A, %B %d, %Y"),
         "iso": now_utc.isoformat(),
     }
+

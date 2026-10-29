@@ -13,3 +13,4 @@ class _Sentinel:
 
 END_OF_RESPONSE = _Sentinel("END_OF_RESPONSE")
 END_OF_SPEECH = _Sentinel("END_OF_SPEECH")
+
