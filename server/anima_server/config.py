@@ -132,7 +132,7 @@ def load_config(env_path: Path | str | None = None) -> Config:
 
     return Config(
         host=os.getenv("SERVER_HOST", "0.0.0.0"),
-        port=int(os.getenv("SERVER_PORT", "8765")),
+        port=int(os.getenv("PORT", os.getenv("SERVER_PORT", "8765"))),
         device_tokens=device_tokens,
         max_sessions=int(os.getenv("MAX_SESSIONS", "2")),
         ssl_certfile=os.getenv("SSL_CERTFILE", ""),
