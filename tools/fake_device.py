@@ -63,6 +63,7 @@ class FakeDevice:
         self.ws: Any = None
         self.ttfa: Optional[float] = None
         self._listen_stop_event = asyncio.Event()
+        self._tts_stop_event = asyncio.Event()
         self._tts_start_time: Optional[float] = None
         self._endpoint_time: Optional[float] = None
 
@@ -114,7 +115,7 @@ class FakeDevice:
         log.info("Received handshake ack: %s", ack)
         return ack
 
-    async def stream_pcm_uplink(self, pcm: np.ndarray, turn: int, drop_frames: int = 0, trailing_silence_s: float = 0.3) -> None:
+    async def stream_pcm_uplink(self, pcm: np.ndarray, turn: int, drop_frames: int = 0, trailing_silence_s: float = 0.8) -> None:
         """Pushes PCM through Opus encoder and streams 20ms frames paced in real time."""
         if trailing_silence_s > 0:
             silence = np.zeros(int(16000 * trailing_silence_s), dtype=np.int16)
@@ -188,6 +189,7 @@ class FakeDevice:
 
                     elif msg_type == "tts.stop":
                         log.info("Received tts.stop. Playback finished.")
+                        self._tts_stop_event.set()
                         await self.send_json(PlaybackMsg(turn=self.turn, event="finished"))
         except Exception as e:
             log.debug("Reader loop ended: %s", e)
@@ -219,8 +221,11 @@ async def run_scenario(args: argparse.Namespace) -> int:
             await dev.send_json(ListenStart(turn=dev.turn, reason="wake_word"))
             pcm = generate_synthetic_speech(duration_s=1.2)
             await dev.stream_pcm_uplink(pcm, turn=dev.turn, drop_frames=args.drop_frames)
-            # Wait for reply
-            await asyncio.sleep(2.5)
+            # Wait for reply with timeout
+            try:
+                await asyncio.wait_for(dev._tts_stop_event.wait(), timeout=10.0)
+            except asyncio.TimeoutError:
+                log.warning("Timed out waiting for tts.stop")
 
         elif scenario == "no_speech":
             dev.turn = 1
