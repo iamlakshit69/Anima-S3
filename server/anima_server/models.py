@@ -68,7 +68,13 @@ class ModelHub:
             from faster_whisper import WhisperModel
 
             log.info("Loading Whisper model: %s (compute=%s, device=%s)", cfg.whisper_model, cfg.whisper_compute, cfg.whisper_device)
-            whisper = WhisperModel(cfg.whisper_model, device=cfg.whisper_device, compute_type=cfg.whisper_compute)
+            whisper = WhisperModel(
+                cfg.whisper_model,
+                device=cfg.whisper_device,
+                compute_type=cfg.whisper_compute,
+                cpu_threads=4,
+                num_workers=1,
+            )
         except Exception as e:
             log.warning("faster-whisper not available: %s. Using FakeWhisper.", e)
             whisper = FakeWhisper()

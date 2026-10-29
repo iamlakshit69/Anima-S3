@@ -230,9 +230,9 @@ async def run_scenario(args: argparse.Namespace) -> int:
             else:
                 pcm = generate_synthetic_speech(duration_s=1.2)
             await dev.stream_pcm_uplink(pcm, turn=dev.turn, drop_frames=args.drop_frames)
-            # Wait for reply with timeout
+            # Wait for reply with timeout (allow up to 45s for shared cloud CPU)
             try:
-                await asyncio.wait_for(dev._tts_stop_event.wait(), timeout=15.0)
+                await asyncio.wait_for(dev._tts_stop_event.wait(), timeout=45.0)
             except asyncio.TimeoutError:
                 log.warning("Timed out waiting for tts.stop")
 
