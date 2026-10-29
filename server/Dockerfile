@@ -17,10 +17,10 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download Kokoro ONNX model and voices for real neural TTS
+# Download quantized Kokoro INT8 ONNX model (~92 MB) and voices (~28 MB) to stay well under 512MB RAM
 RUN mkdir -p /app/models \
-    && curl -fSL -o /app/models/kokoro-v1.0.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.onnx \
-    && curl -fSL -o /app/models/voices-v1.0.bin https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.0.bin
+    && curl -fSL -o /app/models/kokoro-v1.0.int8.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.int8.onnx \
+    && curl -fSL -o /app/models/voices-v1.0.bin https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
 
 # Copy server code
 COPY . ./server/
@@ -28,7 +28,7 @@ RUN chown -R appuser:appuser /app
 
 USER appuser
 ENV PYTHONPATH=/app/server
-ENV KOKORO_MODEL=/app/models/kokoro-v1.0.onnx
+ENV KOKORO_MODEL=/app/models/kokoro-v1.0.int8.onnx
 ENV KOKORO_VOICES=/app/models/voices-v1.0.bin
 
 # Expose default port
