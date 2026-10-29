@@ -61,7 +61,6 @@ PYTHON_HEADER = """\
 # THIS FILE IS AUTO-GENERATED — DO NOT EDIT BY HAND.
 # Source: protocol/constants.yaml
 # Generator: protocol/gen.py
-# Generated: {ts}
 #
 # R6 (Notes for agents.md): Generated files are never edited by hand.
 #     Change protocol/constants.yaml and run `python protocol/gen.py`.
@@ -150,8 +149,7 @@ def _py_message_types(msg: dict) -> str:
 
 
 def generate_python(data: dict) -> str:
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    out = [PYTHON_HEADER.format(ts=ts)]
+    out = [PYTHON_HEADER]
 
     proto = data["protocol"]
     frame = data["frame"]
@@ -259,7 +257,6 @@ C_HEADER_TMPL = """\
  * THIS FILE IS AUTO-GENERATED — DO NOT EDIT BY HAND.
  * Source: protocol/constants.yaml
  * Generator: protocol/gen.py
- * Generated: {ts}
  *
  * R6 (Notes for agents.md): Generated files are never edited by hand.
  *     Change protocol/constants.yaml and run `python protocol/gen.py`.
@@ -432,7 +429,6 @@ def _c_msg_defines(msg: dict) -> str:
 
 
 def generate_c_header(data: dict) -> str:
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     proto = data["protocol"]
     frame = data["frame"]
     audio = data["audio"]
@@ -444,7 +440,6 @@ def generate_c_header(data: dict) -> str:
     dn = audio["downlink"]
 
     return C_HEADER_TMPL.format(
-        ts=ts,
         proto_version=proto["version"],
         header_size=frame["header_size"],
         kind_up=frame["kind_up"],
