@@ -74,12 +74,21 @@ async def run_server(cfg: Config, use_fakes: bool = False) -> None:
     # 4. Start Admin API (Architecture Section 6.11)
     admin_runner = await start_admin_api(cfg, ws_server)
 
+    def process_http_request(connection: Any, request: Any) -> Any:
+        """Responds 200 OK to plain HTTP probes from Cloud providers (e.g. Render / GCP / AWS)."""
+        import http
+        path = getattr(request, "path", "")
+        if path in ("/", "/healthz", "/health"):
+            return connection.respond(http.HTTPStatus.OK, "ANIMA-S3 Server OK\n")
+        return None
+
     try:
         async with websockets.serve(
             ws_server.handle_connection,
             cfg.host,
             cfg.port,
             ssl=ssl_context,
+            process_request=process_http_request,
             max_size=65536,
             ping_interval=10,
             ping_timeout=30,
