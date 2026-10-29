@@ -107,6 +107,8 @@ def load_config(env_path: Path | str | None = None) -> Config:
     """Loads configuration from environment and optional .env file."""
     if env_path:
         p = Path(env_path)
+        if not p.exists() and (Path("server") / p).exists():
+            p = Path("server") / p
         if p.exists():
             for line in p.read_text().splitlines():
                 line = line.strip()

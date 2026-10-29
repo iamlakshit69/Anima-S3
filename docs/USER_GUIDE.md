@@ -199,3 +199,4 @@ Run an automated soak verification session:
 | **No audio recorded** | Mic wiring / shift | Verify INMP441 WS/SCK/SD pins and ensure L/R is tied to GND. |
 | **Speaker buzzes/clicks** | Low power | Ensure 5V supply provides ≥1A; MAX98357A requires clean power for class-D operation. |
 | **Server disconnects** | Ping timeout | Check Wi-Fi signal RSSI (reported in telemetry messages). |
+

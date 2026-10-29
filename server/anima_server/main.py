@@ -92,9 +92,11 @@ async def run_server(cfg: Config, use_fakes: bool = False) -> None:
 
 
 def main() -> None:
+    import os
     cfg = load_config(".env")
+    use_fakes = "--fakes" in sys.argv or os.getenv("USE_FAKES", "0").lower() in ("1", "true", "yes")
     try:
-        asyncio.run(run_server(cfg))
+        asyncio.run(run_server(cfg, use_fakes=use_fakes))
     except KeyboardInterrupt:
         pass
 
