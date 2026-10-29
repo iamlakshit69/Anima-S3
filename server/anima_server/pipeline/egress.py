@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 
 from anima_server.core.sentinel import END_OF_SPEECH
+from anima_server.pipeline.emotion import classify as classify_emotion
 from anima_server.transport.protocol import ReplyMsg, TtsStart, TtsStop
 from anima_server.transport.protocol_gen import (
     AudioFrame,
@@ -126,9 +127,10 @@ async def egress_stage(session: Any) -> None:
             stream_t0 = time.time()
             seq = 0
 
-        # Subtitle text message for device display
+        # Subtitle text message for device display (with emotion tag per Architecture §7.11)
         if item.text:
-            await session.send(ReplyMsg(turn=turn, text=item.text))
+            emotion = classify_emotion(item.text)
+            await session.send(ReplyMsg(turn=turn, text=item.text, emotion=emotion))
 
         # Encode PCM into 20ms frames and send
         pcm = item.pcm

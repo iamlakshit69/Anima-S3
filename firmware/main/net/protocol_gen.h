@@ -2,7 +2,7 @@
  * THIS FILE IS AUTO-GENERATED — DO NOT EDIT BY HAND.
  * Source: protocol/constants.yaml
  * Generator: protocol/gen.py
- * Generated: 2026-10-29T14:01:15Z
+ * Generated: 2026-10-29T14:12:54Z
  *
  * R6 (Notes for agents.md): Generated files are never edited by hand.
  *     Change protocol/constants.yaml and run `python protocol/gen.py`.

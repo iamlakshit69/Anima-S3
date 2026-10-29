@@ -103,3 +103,26 @@
 - **Call / behaviour verified:** ONNX model execution and tensor input management for Silero VAD.
 - **Command or test used:** `.venv/bin/python -c "import onnxruntime; print(onnxruntime.__version__)"`
 - **Result:** PASS.
+
+## Phase 6 additions
+
+## re (Python stdlib)
+
+- **Version verified:** Python 3.11 stdlib `re` module (no third-party dependency)
+- **Date:** 2026-10-29
+- **Phase:** 6
+- **Call / behaviour verified:** `re.compile()`, `re.search()` with `re.IGNORECASE` flag;
+  used for emotion classification patterns and SemanticPolicy `_is_finished_thought()`.
+- **Command or test used:** `PYTHONPATH=server .venv/bin/python -m pytest server/tests/test_emotion.py server/tests/test_endpointer.py -q`
+- **Result:** 37/37 passed. No external library needed.
+
+## emotion.classify (internal module)
+
+- **Version verified:** `server/anima_server/pipeline/emotion.py` (new in Phase 6)
+- **Date:** 2026-10-29
+- **Phase:** 6
+- **Call / behaviour verified:** `classify(text: str) -> str` returns one of the six fixed
+  emotion labels. Called from `egress_stage` on every phrase before sending `ReplyMsg`.
+  Import path: `from anima_server.pipeline.emotion import classify as classify_emotion`.
+- **Command or test used:** `PYTHONPATH=server .venv/bin/python -m pytest server/tests/test_emotion.py -q`
+- **Result:** 22/22 passed.

@@ -4,6 +4,7 @@ server/anima_server/audio/endpointer.py — Voice activity & utterance endpointe
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, List, Literal, Protocol
 
@@ -26,6 +27,58 @@ class FixedPolicy:
 
     def decide(self, silence_ms: int, speech_ms: int, partial_text: str | None = None) -> Literal["END", "WAIT"]:
         return "END" if silence_ms >= self.fixed_silence_ms else "WAIT"
+
+
+# ---------------------------------------------------------------------------
+# Semantic endpoint policy (Phase 6) — Architecture section 6.4
+# ---------------------------------------------------------------------------
+
+# Regex patterns that indicate a complete thought / finished utterance.
+_SENTENCE_END = re.compile(r"[.!?]\s*$")
+_COMMAND_FORMS = re.compile(
+    r"\b(turn (on|off)|set .+ to|play|stop|pause|resume|open|close|"
+    r"call|send|remind|add|remove|delete|show|tell me|what time|"
+    r"what is|how (much|many|long|do)|never mind|cancel|that'?s all)\b",
+    re.IGNORECASE,
+)
+_COMPLETE_QUESTION = re.compile(
+    r"\b(who|what|when|where|why|how).+[?]$",
+    re.IGNORECASE,
+)
+
+
+def _is_finished_thought(text: str) -> bool:
+    """Returns True if partial_text looks like a syntactically complete utterance."""
+    if not text or len(text.strip()) < 3:
+        return False
+    t = text.strip()
+    if _SENTENCE_END.search(t):
+        return True
+    if _COMPLETE_QUESTION.search(t):
+        return True
+    if _COMMAND_FORMS.search(t):
+        return True
+    return False
+
+
+class SemanticPolicy:
+    """Endpoint policy that ends turns earlier when the partial transcript is a finished thought.
+
+    - If the partial transcript is a finished thought: end at ``early_silence_ms`` of silence.
+    - Otherwise: wait up to ``silence_max_ms``.
+
+    This matches Architecture section 6.4 (Phase 6 SemanticPolicy).
+    Both ``FixedPolicy`` and ``SemanticPolicy`` satisfy the ``EndOfTurnPolicy`` Protocol.
+    """
+
+    def __init__(self, early_silence_ms: int = 400, silence_max_ms: int = 1100):
+        self.early_silence_ms = early_silence_ms
+        self.silence_max_ms = silence_max_ms
+
+    def decide(self, silence_ms: int, speech_ms: int, partial_text: str | None = None) -> Literal["END", "WAIT"]:
+        if partial_text and _is_finished_thought(partial_text):
+            return "END" if silence_ms >= self.early_silence_ms else "WAIT"
+        return "END" if silence_ms >= self.silence_max_ms else "WAIT"
 
 
 class VADModel(Protocol):

@@ -5,6 +5,62 @@ Format: `## [Phase N] YYYY-MM-DD — brief title` followed by a bullet list.
 
 ---
 
+## [Phase 6] 2026-10-29 — LCD UI, emotion classification, and semantic endpointing
+
+### Added
+- **`firmware/main/ui/lcd_ui.h`** — `LcdUi` class implementing the `Ui` interface for a
+  128×160 ST7735/ST7789-compatible panel. Provides `show_state`, `show_text`, `show_emotion`,
+  and `notify`. Status bar (state label), emotion glyph (ASCII face), and subtitle row. All
+  SPI/GPIO hardware calls are gated behind `#if ESP_PLATFORM && CONFIG_LCD_ENABLED` so host
+  tests compile without any ESP-IDF dependency. **Pin assignments are AI-generated unverified
+  defaults; see `docs/HARDWARE.md` before flashing.**
+- **`firmware/host_test/test_lcd_ui_host.cc`** — 8 cases: state→label mapping, emotion
+  storage, subtitle round-trip, notify routing, idempotent show_state, overflow-safe copies
+  for subtitle and emotion, last-write-wins on multiple show_text calls.
+- **`server/anima_server/pipeline/emotion.py`** — Lightweight regex-heuristic emotion
+  classifier. Six categories: `happy`, `sad`, `calm`, `excited`, `questioning`, `neutral`.
+  No external model; evaluates in priority order (questioning → excited → happy → sad →
+  calm → neutral). Verified: no third-party libraries required.
+- **`server/anima_server/audio/endpointer.py` — `SemanticPolicy`** — Phase 6 endpoint policy.
+  Ends the turn early (~400 ms silence) if the partial transcript is a "finished thought"
+  (sentence-final punctuation, complete question, or command form); waits up to
+  `silence_max_ms` (default 1100 ms) otherwise. Satisfies `EndOfTurnPolicy` protocol and
+  is backward-compatible with `FixedPolicy`.
+- **Config: `semantic_endpointing: bool = False`** and **`semantic_early_silence_ms: int = 400`**
+  in `Config` dataclass; loaded from `SEMANTIC_ENDPOINTING` and `SEMANTIC_EARLY_SILENCE_MS`
+  env vars. Default off.
+- **Emotion wired into egress** — `egress_stage` calls `emotion.classify(text)` on each
+  phrase and populates the `emotion` field of `ReplyMsg` before sending it to the device.
+  The device can use this to drive the LCD emotion glyph.
+- **SemanticPolicy wired into session** — `Session.__init__` checks `cfg.semantic_endpointing`
+  and instantiates either `SemanticPolicy` or `FixedPolicy` accordingly.
+
+### Tests
+- `server/tests/test_emotion.py` — 22 cases covering all six emotion categories, empty
+  input, whitespace, priority ordering, and the return-type contract.
+- `server/tests/test_endpointer.py` — extended with 12 SemanticPolicy cases: unit-level
+  `decide()` for finished/unfinished thoughts, `None` partial text, `?` sentence endings,
+  command detection, protocol conformance, and integration with `Endpointer`.
+- `firmware/host_test/test_lcd_ui_host.cc` — 8 cases (see Added above).
+
+### Test run (2026-10-29)
+```
+C++ host tests : ctest --test-dir firmware/host_test/build → 10/10 passed
+Python server  : PYTHONPATH=server .venv/bin/python -m pytest server/tests -q → 79/79 passed
+Protocol tests : PYTHONPATH=. .venv/bin/python -m pytest protocol/tests -q → 51/51 passed
+```
+
+### Not changed / deferred
+- LCD SPI hardware driver (`lcd_hw_init`, `lcd_clear`) — deferred to Phase 7; requires
+  confirmed hardware wiring in `docs/HARDWARE.md`.
+- Streaming TTS — architecture lists it as optional for Phase 6; `kokoro-onnx` streaming
+  API is unverified against the installed version (R14). Deferred to Phase 7.
+- Partial transcript plumbing from STT to Endpointer — the `Endpointer.feed()` call does
+  not yet receive a `partial_text` argument from the STT stage. SemanticPolicy is fully
+  exercised via unit tests and can be wired into STT streaming in Phase 7.
+
+---
+
 ## [Phase 5] 2026-10-29 — Provisioning, settings, OTA with rollback, admin API
 
 ### Added

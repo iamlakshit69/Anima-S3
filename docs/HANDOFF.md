@@ -308,3 +308,68 @@ cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 9/9 hos
 - Start **Phase 6: LCD UI, emotion, semantic endpointing**.
 - Review Architecture Plan section 7.11 (UI: LedUi vs LcdUi, ST7735 128x160 display, emotion glyphs, scrolling subtitles from `stt` and `reply` messages) and section 6.4 (SemanticPolicy endpointer).
 - Note: O5 resolved that LCD is Phase 6 only (can be emulated/tested on host, ready for hardware integration).
+
+---
+
+## Entry 008 — Phase 6 LCD UI, Emotion Classification, Semantic Endpointing
+
+**Date:** 2026-10-29
+**Agent:** Antigravity coding agent
+**Phase:** 6
+
+### What was done
+
+#### Server
+- `server/anima_server/pipeline/emotion.py` — New lightweight regex-heuristic emotion
+  classifier. Six categories: `happy`, `sad`, `calm`, `excited`, `questioning`, `neutral`.
+  Priority order: questioning → excited → happy → sad → calm → neutral. No external models.
+- `server/anima_server/audio/endpointer.py` — Added `SemanticPolicy` class (Phase 6
+  architecture §6.4). Ends a turn early at `early_silence_ms` (default 400 ms) if the
+  partial transcript is a "finished thought" (sentence-final punctuation, complete question,
+  or command form). Falls back to `silence_max_ms` (1100 ms) for incomplete utterances.
+  Added `import re` and `_is_finished_thought()` helper.
+- `server/anima_server/config.py` — Added `semantic_endpointing: bool = False` and
+  `semantic_early_silence_ms: int = 400` (env: `SEMANTIC_ENDPOINTING`, `SEMANTIC_EARLY_SILENCE_MS`).
+- `server/anima_server/transport/session.py` — Session constructor now checks
+  `cfg.semantic_endpointing` and picks `SemanticPolicy` or `FixedPolicy` accordingly.
+- `server/anima_server/pipeline/egress.py` — `egress_stage` now imports `emotion.classify`
+  and attaches the emotion label to every `ReplyMsg` sent to the device.
+
+#### Firmware
+- `firmware/main/ui/lcd_ui.h` — `LcdUi` class implementing `Ui` interface. Status bar
+  (state label), ASCII emotion glyph, subtitle slot. All SPI/GPIO calls behind
+  `#if ESP_PLATFORM && CONFIG_LCD_ENABLED`. Safe to include in host tests.
+- `firmware/host_test/test_lcd_ui_host.cc` — 8 host test cases.
+- `firmware/host_test/CMakeLists.txt` — Added `test_lcd_ui_host` target (test #10).
+
+#### Tests
+- `server/tests/test_emotion.py` — 22 cases (all pass).
+- `server/tests/test_endpointer.py` — Extended with 12 SemanticPolicy cases (all pass).
+
+### Tests run
+```sh
+ctest --test-dir firmware/host_test/build --output-on-failure  → 10/10 passed
+PYTHONPATH=server .venv/bin/python -m pytest server/tests -q   → 79/79 passed
+PYTHONPATH=. .venv/bin/python -m pytest protocol/tests -q      → 51/51 passed
+```
+
+### Half-done / deferred
+- **LCD SPI hardware driver** (`lcd_hw_init`, pixel rendering) — stub only. Deferred until
+  hardware wiring is confirmed in `docs/HARDWARE.md`. **Pin defaults (MOSI=11, SCLK=12,
+  CS=10, DC=13, RST=14, BL=21) are UNVERIFIED. Do not flash.**
+- **Streaming TTS** — listed as optional for Phase 6 in the architecture. `kokoro-onnx`
+  streaming API unverified (R14). Deferred to Phase 7.
+- **Partial transcript piped to Endpointer** — `Endpointer.feed()` does not yet receive
+  `partial_text` from the STT stage. SemanticPolicy is fully unit-tested. Wiring the live
+  partial transcript through the pipeline is a Phase 7 task.
+
+### Blocked on
+- Nothing. Phase 6 acceptance tests pass.
+
+### Next agent: start here
+- Start **Phase 7: Hardening, soak, packaging**.
+- Key tasks: 24-hour soak test, `anima_check` diagnostics report in CI, wss TLS
+  documentation, optional signed OTA, Docker or systemd packaging for the server, user guide.
+- Wire partial transcript from STT to `Endpointer.feed()` so `SemanticPolicy` sees live text.
+- Confirm LCD GPIO wiring with the human, write to `docs/HARDWARE.md`, then implement the
+  SPI pixel renderer in `lcd_ui.h` / `lcd_ui.cc`.

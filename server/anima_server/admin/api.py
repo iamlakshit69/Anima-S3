@@ -96,3 +96,4 @@ async def start_admin_api(cfg: Config, ws_server: Any = None) -> web.AppRunner:
     await site.start()
     log.info("Admin API running at http://%s:%d (auth required)", cfg.admin_host, cfg.admin_port)
     return runner
+

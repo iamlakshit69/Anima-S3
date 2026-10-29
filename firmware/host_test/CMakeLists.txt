@@ -51,3 +51,7 @@ add_test(NAME test_tools_host COMMAND test_tools_host)
 # 9. Settings, OTA manager, and auth error handling test
 add_executable(test_settings_ota_host test_settings_ota_host.cc ../main/sys/settings.cc ../main/net/ota_manager.cc ../main/net/ws_client.cc)
 add_test(NAME test_settings_ota_host COMMAND test_settings_ota_host)
+
+# 10. LCD UI — state labels, emotion glyphs, subtitle, overflow safety
+add_executable(test_lcd_ui_host test_lcd_ui_host.cc)
+add_test(NAME test_lcd_ui_host COMMAND test_lcd_ui_host)

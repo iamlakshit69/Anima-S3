@@ -161,3 +161,4 @@ void OtaManager::rollback_and_reboot() {
 OtaStatus OtaManager::get_status() {
     return s_status;
 }
+

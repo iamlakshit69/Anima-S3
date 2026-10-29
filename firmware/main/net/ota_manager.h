@@ -53,3 +53,4 @@ public:
 
     static OtaStatus get_status();
 };
+

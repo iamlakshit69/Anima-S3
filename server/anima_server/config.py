@@ -38,6 +38,9 @@ class Config:
     max_turn_ms: int = 20000
     min_audio_ms: int = 500
     min_audio_rms: float = 0.01
+    # Phase 6: semantic endpointing (default off; enable via SEMANTIC_ENDPOINTING=true)
+    semantic_endpointing: bool = False
+    semantic_early_silence_ms: int = 400
 
     # STT (Whisper)
     whisper_model: str = "base.en"
@@ -143,6 +146,8 @@ def load_config(env_path: Path | str | None = None) -> Config:
         listen_timeout_ms=int(os.getenv("LISTEN_TIMEOUT_MS", "6000")),
         max_turn_ms=int(os.getenv("MAX_TURN_MS", "20000")),
         min_audio_ms=int(os.getenv("MIN_AUDIO_MS", "500")),
+        semantic_endpointing=os.getenv("SEMANTIC_ENDPOINTING", "false").lower() in ("1", "true", "yes"),
+        semantic_early_silence_ms=int(os.getenv("SEMANTIC_EARLY_SILENCE_MS", "400")),
         whisper_model=os.getenv("WHISPER_MODEL", "base.en"),
         whisper_compute=os.getenv("WHISPER_COMPUTE", "int8"),
         whisper_device=os.getenv("WHISPER_DEVICE", "cpu"),

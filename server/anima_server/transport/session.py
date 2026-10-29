@@ -12,7 +12,7 @@ import uuid
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
-from anima_server.audio.endpointer import Endpointer, FixedPolicy
+from anima_server.audio.endpointer import Endpointer, FixedPolicy, SemanticPolicy
 from anima_server.audio.opus_codec import OpusDecoder, OpusEncoder
 from anima_server.config import Config
 from anima_server.core.metrics import SessionMetrics, TurnLatency
@@ -100,7 +100,13 @@ class Session:
         self.egress_q: asyncio.Queue = asyncio.Queue(maxsize=10)
 
         # Tools & Endpointer
-        self.policy = FixedPolicy(cfg.fixed_silence_ms)
+        if cfg.semantic_endpointing:
+            self.policy = SemanticPolicy(
+                early_silence_ms=cfg.semantic_early_silence_ms,
+                silence_max_ms=cfg.silence_max_ms,
+            )
+        else:
+            self.policy = FixedPolicy(cfg.fixed_silence_ms)
         self.endpointer: Optional[Endpointer] = None
         self.tools = ToolRegistry(cfg, self)
         if hello.tools:
