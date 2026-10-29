@@ -69,6 +69,15 @@ class Config:
     fast_path_intents: bool = True
     tools_config_path: str = "tools.yaml"
 
+    # Admin API & OTA (Architecture Section 6.11)
+    admin_host: str = "127.0.0.1"
+    admin_port: int = 8766
+    admin_token: str = "admin-secret-token"
+    ota_firmware_version: str = "1.0.0"
+    ota_firmware_url: str = ""
+    ota_firmware_sha256: str = ""
+    ota_firmware_size: int = 0
+
 
 def validate(c: Config) -> None:
     """Validates configuration invariants. Raises AssertionError on invalid config."""
@@ -88,6 +97,7 @@ def validate(c: Config) -> None:
     )
     assert c.up_rate in (8000, 12000, 16000, 24000, 48000), f"Unsupported up_rate: {c.up_rate}"
     assert c.down_rate in (8000, 12000, 16000, 24000, 48000), f"Unsupported down_rate: {c.down_rate}"
+    assert c.admin_port != c.port, f"Admin port ({c.admin_port}) must differ from device WebSocket port ({c.port})"
 
 
 def load_config(env_path: Path | str | None = None) -> Config:
@@ -148,5 +158,12 @@ def load_config(env_path: Path | str | None = None) -> Config:
         voice=os.getenv("KOKORO_VOICE", "af_bella"),
         speed=float(os.getenv("KOKORO_SPEED", "1.05")),
         fast_path_intents=os.getenv("FAST_PATH_INTENTS", "true").lower() in ("1", "true", "yes"),
+        admin_host=os.getenv("ANIMA_ADMIN_HOST", os.getenv("ADMIN_HOST", "127.0.0.1")),
+        admin_port=int(os.getenv("ANIMA_ADMIN_PORT", os.getenv("ADMIN_PORT", "8766"))),
+        admin_token=os.getenv("ANIMA_ADMIN_TOKEN", os.getenv("ADMIN_TOKEN", "admin-secret-token")),
+        ota_firmware_version=os.getenv("ANIMA_OTA_FIRMWARE_VERSION", "1.0.0"),
+        ota_firmware_url=os.getenv("ANIMA_OTA_FIRMWARE_URL", ""),
+        ota_firmware_sha256=os.getenv("ANIMA_OTA_FIRMWARE_SHA256", ""),
+        ota_firmware_size=int(os.getenv("ANIMA_OTA_FIRMWARE_SIZE", "0")),
     )
 

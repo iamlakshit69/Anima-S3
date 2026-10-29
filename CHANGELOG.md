@@ -5,6 +5,35 @@ Format: `## [Phase N] YYYY-MM-DD — brief title` followed by a bullet list.
 
 ---
 
+## [Phase 5] 2026-10-29 — Provisioning, settings, OTA with rollback, admin API
+
+### Added
+- **Authenticated Admin API & OTA Authority**:
+  - `server/anima_server/admin/api.py`: Implemented standalone HTTP Admin API service on separate port (`8766`) with bearer token authentication (`admin_token`).
+  - Endpoints:
+    - `GET /healthz`: Server health check, uptime, and active session count.
+    - `GET /metrics`: Aggregated performance counters and active connection metrics.
+    - `GET /ota/manifest`: Rule R11-compliant firmware manifest delivery (`version`, `url`, `sha256`, `size`).
+  - `server/tests/test_admin_api.py`: 4 unit tests verifying token authorization (401 on missing/invalid token), healthz reporting, and manifest responses.
+  - Integrated `start_admin_api` supervisor into `server/anima_server/main.py`.
+- **Firmware Settings & NVS Persistence**:
+  - `firmware/main/sys/settings.h`/`.cc`: Added credential validation (`has_credentials()`), persistent Wi-Fi SSID/password, server URL, device token, and volume/brightness setters with clamping.
+- **A/B OTA Update Engine with Rollback Protection**:
+  - `firmware/main/net/ota_manager.h`/`.cc`: Manifest parser and integrity validator checking version differentiation, HTTPS/HTTP URLs, 64-character SHA-256 verification, and 3 MB slot constraint.
+  - Rollback protection: `mark_running_partition_valid()` cancels rollback only after successful post-boot self-test (`AudioIO` + Wi-Fi). If self-test fails, `rollback_and_reboot()` automatically reverts to the previous working partition slot.
+- **Terminal E_AUTH Handling**:
+  - `firmware/main/net/ws_client.h`/`.cc`: Added `set_auth_error()` and `should_retry()` checks. On 4401 (`E_AUTH`), backoff reconnection is stopped immediately to prevent futile retry loops.
+- **Host Test Suite**:
+  - `firmware/host_test/test_settings_ota_host.cc`: Added host tests verifying settings persistence, OTA manifest parsing & integrity validation, size limits, simulated OTA execution, and `E_AUTH` retry termination.
+
+### Tests
+```sh
+cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 9/9 host tests passed (100%)
+.venv/bin/python -m pytest server/tests protocol/tests -q           → 98/98 tests passed (100%)
+```
+
+---
+
 ## [Phase 4] 2026-10-29 — Tools, fast-path intents, endpoint tuning
 
 ### Added

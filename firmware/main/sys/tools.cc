@@ -251,3 +251,4 @@ ToolResult ToolDispatcher::dispatch(const char* tool_name, const char* args_json
     // 3. Execution
     return tool->fn(args_json);
 }
+

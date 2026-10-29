@@ -47,3 +47,7 @@ add_test(NAME test_wake_word_host COMMAND test_wake_word_host)
 # 8. Device tool registry & forbidden check
 add_executable(test_tools_host test_tools_host.cc ../main/sys/tools.cc ../main/sys/settings.cc)
 add_test(NAME test_tools_host COMMAND test_tools_host)
+
+# 9. Settings, OTA manager, and auth error handling test
+add_executable(test_settings_ota_host test_settings_ota_host.cc ../main/sys/settings.cc ../main/net/ota_manager.cc ../main/net/ws_client.cc)
+add_test(NAME test_settings_ota_host COMMAND test_settings_ota_host)

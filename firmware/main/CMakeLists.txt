@@ -12,6 +12,7 @@ idf_component_register(
         "audio/cues.cc"
         "boards/breadboard_s3/board.cc"
         "net/ws_client.cc"
+        "net/ota_manager.cc"
         "sys/buttons.cc"
         "sys/settings.cc"
         "sys/tools.cc"

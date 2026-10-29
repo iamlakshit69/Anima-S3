@@ -50,10 +50,36 @@ const DeviceSettings& Settings::get() {
     return s_current;
 }
 
+bool Settings::has_credentials() {
+    return (s_current.wifi_ssid[0] != '\0' && s_current.device_token[0] != '\0');
+}
+
 void Settings::set_volume(uint8_t vol) {
     s_current.volume = (vol > 100) ? 100 : vol;
 }
 
 void Settings::set_brightness(uint8_t br) {
     s_current.brightness = (br > 100) ? 100 : br;
+}
+
+void Settings::set_wifi(const char* ssid, const char* pass) {
+    if (ssid) {
+        strncpy(s_current.wifi_ssid, ssid, sizeof(s_current.wifi_ssid) - 1);
+        s_current.wifi_ssid[sizeof(s_current.wifi_ssid) - 1] = '\0';
+    }
+    if (pass) {
+        strncpy(s_current.wifi_pass, pass, sizeof(s_current.wifi_pass) - 1);
+        s_current.wifi_pass[sizeof(s_current.wifi_pass) - 1] = '\0';
+    }
+}
+
+void Settings::set_server(const char* url, const char* token) {
+    if (url) {
+        strncpy(s_current.server_url, url, sizeof(s_current.server_url) - 1);
+        s_current.server_url[sizeof(s_current.server_url) - 1] = '\0';
+    }
+    if (token) {
+        strncpy(s_current.device_token, token, sizeof(s_current.device_token) - 1);
+        s_current.device_token[sizeof(s_current.device_token) - 1] = '\0';
+    }
 }

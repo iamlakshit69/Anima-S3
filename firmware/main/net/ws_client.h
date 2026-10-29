@@ -22,5 +22,10 @@ public:
 
     static uint32_t get_next_backoff_delay_ms();
     static void reset_backoff();
+
+    // Authentication error handling (Phase 5 acceptance)
+    static bool has_auth_error();
+    static void set_auth_error(bool err);
+    static bool should_retry();
 };
 

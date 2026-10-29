@@ -23,8 +23,11 @@ public:
     static bool load(DeviceSettings* out);
     static bool save(const DeviceSettings& in);
     static const DeviceSettings& get();
+    static bool has_credentials();
     static void set_volume(uint8_t vol);
     static void set_brightness(uint8_t br);
+    static void set_wifi(const char* ssid, const char* pass);
+    static void set_server(const char* url, const char* token);
 
 private:
     static DeviceSettings s_current;

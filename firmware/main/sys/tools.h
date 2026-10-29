@@ -61,3 +61,4 @@ public:
     static ToolResult tool_lamp_set(const char* args_json);
     static ToolResult tool_get_status(const char* args_json);
 };
+

@@ -12,6 +12,7 @@ from typing import Any
 
 import websockets
 
+from anima_server.admin.api import start_admin_api
 from anima_server.config import Config, load_config, validate
 from anima_server.core.logger import setup_logging
 from anima_server.models import ModelHub
@@ -70,18 +71,24 @@ async def run_server(cfg: Config, use_fakes: bool = False) -> None:
         except NotImplementedError:
             pass
 
-    async with websockets.serve(
-        ws_server.handle_connection,
-        cfg.host,
-        cfg.port,
-        ssl=ssl_context,
-        max_size=65536,
-        ping_interval=10,
-        ping_timeout=30,
-    ):
-        log.info("Server is listening on %s://%s:%d/v1/device", "wss" if ssl_context else "ws", cfg.host, cfg.port)
-        await stop_event.wait()
-        log.info("Server shutdown initiated")
+    # 4. Start Admin API (Architecture Section 6.11)
+    admin_runner = await start_admin_api(cfg, ws_server)
+
+    try:
+        async with websockets.serve(
+            ws_server.handle_connection,
+            cfg.host,
+            cfg.port,
+            ssl=ssl_context,
+            max_size=65536,
+            ping_interval=10,
+            ping_timeout=30,
+        ):
+            log.info("Server is listening on %s://%s:%d/v1/device", "wss" if ssl_context else "ws", cfg.host, cfg.port)
+            await stop_event.wait()
+            log.info("Server shutdown initiated")
+    finally:
+        await admin_runner.cleanup()
 
 
 def main() -> None:

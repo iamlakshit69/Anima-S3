@@ -15,6 +15,7 @@ static esp_websocket_client_handle_t s_client = nullptr;
 #endif
 
 static bool s_connected = false;
+static bool s_auth_error = false;
 static uint32_t s_backoff_step = 0;
 static const uint32_t s_backoff_steps_s[] = {1, 2, 4, 8, 16, 30};
 static constexpr size_t kMaxBackoffSteps = sizeof(s_backoff_steps_s) / sizeof(s_backoff_steps_s[0]);
@@ -104,5 +105,18 @@ uint32_t WsClient::get_next_backoff_delay_ms() {
 
 void WsClient::reset_backoff() {
     s_backoff_step = 0;
+}
+
+bool WsClient::has_auth_error() {
+    return s_auth_error;
+}
+
+void WsClient::set_auth_error(bool err) {
+    s_auth_error = err;
+}
+
+bool WsClient::should_retry() {
+    // If token was rejected with E_AUTH (4401), stop retrying per Architecture 7.7
+    return !s_auth_error;
 }
 
