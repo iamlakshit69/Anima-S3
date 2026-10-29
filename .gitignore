@@ -60,3 +60,7 @@ Icon?
 
 # Secrets — NEVER commit real values
 # .env files are already excluded above; add others here if needed
+
+# Audio and model downloads
+models/
+test_audio/

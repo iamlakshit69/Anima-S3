@@ -219,13 +219,35 @@ async def run_scenario(args: argparse.Namespace) -> int:
         if scenario == "normal":
             dev.turn = 1
             await dev.send_json(ListenStart(turn=dev.turn, reason="wake_word"))
-            pcm = generate_synthetic_speech(duration_s=1.2)
+            if args.wav and args.wav.exists():
+                import scipy.io.wavfile as wavfile
+                sr, pcm = wavfile.read(str(args.wav))
+                if pcm.ndim > 1:
+                    pcm = pcm[:, 0]
+                if pcm.dtype != np.int16:
+                    pcm = (pcm * 32767).astype(np.int16)
+                log.info("Streaming user WAV file: %s (%d samples, %d Hz)", args.wav, len(pcm), sr)
+            else:
+                pcm = generate_synthetic_speech(duration_s=1.2)
             await dev.stream_pcm_uplink(pcm, turn=dev.turn, drop_frames=args.drop_frames)
             # Wait for reply with timeout
             try:
-                await asyncio.wait_for(dev._tts_stop_event.wait(), timeout=10.0)
+                await asyncio.wait_for(dev._tts_stop_event.wait(), timeout=15.0)
             except asyncio.TimeoutError:
                 log.warning("Timed out waiting for tts.stop")
+
+            # Save received downlink audio if --out is requested
+            if args.out and dev.received_audio_frames:
+                import scipy.io.wavfile as wavfile
+                pcm_out_chunks = []
+                for f in dev.received_audio_frames:
+                    chunk = dev.decoder.decode(f.opus)
+                    pcm_out_chunks.append(chunk)
+                if pcm_out_chunks:
+                    full_pcm = np.concatenate(pcm_out_chunks)
+                    args.out.parent.mkdir(parents=True, exist_ok=True)
+                    wavfile.write(str(args.out), 24000, full_pcm)
+                    log.info("Saved assistant reply audio to %s (%d samples, 24kHz)", args.out, len(full_pcm))
 
         elif scenario == "no_speech":
             dev.turn = 1
