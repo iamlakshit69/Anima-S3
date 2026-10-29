@@ -64,3 +64,42 @@
 - [ ] `openai` client — async `models.list()` and `chat.completions.create(stream=True)` with tool calls.
 - [ ] ESP-IDF version compatible with esp-sr, esp_audio_codec, esp_websocket_client.
 - [ ] ESP-SR WakeNet — exact model partition format and name, wake word list.
+
+
+---
+
+## Python runtime (Phase 1 virtualenv)
+
+- **Version verified:** 3.11.15
+- **Date:** 2026-10-29
+- **Phase:** 1
+- **Call / behaviour verified:** Python 3.11 venv with full wheel support for audio and ML modules.
+- **Command or test used:** `.venv/bin/python --version`
+- **Result:** PASS.
+
+## websockets
+
+- **Version verified:** 17.3
+- **Date:** 2026-10-29
+- **Phase:** 1
+- **Call / behaviour verified:** `websockets.connect(..., additional_headers=...)`, `ws.request.headers`, `websockets.serve(handle_connection, ...)`
+- **Command or test used:** `.venv/bin/python -m pytest server/tests/test_integration.py`
+- **Result:** PASS.
+
+## opuslib & libopus
+
+- **Version verified:** opuslib 3.0.1, libopus 1.5.2 (Homebrew)
+- **Date:** 2026-10-29
+- **Phase:** 1
+- **Call / behaviour verified:** `Encoder.encode(pcm, 320/480)`, `Decoder.decode(packet, 320/480)`, Packet Loss Concealment (PLC) with `decode(b"", 320, decode_fec=True)`.
+- **Command or test used:** `.venv/bin/python -m pytest server/tests/test_opus_codec.py`
+- **Result:** PASS.
+
+## onnxruntime
+
+- **Version verified:** 1.31.1
+- **Date:** 2026-10-29
+- **Phase:** 1
+- **Call / behaviour verified:** ONNX model execution and tensor input management for Silero VAD.
+- **Command or test used:** `.venv/bin/python -c "import onnxruntime; print(onnxruntime.__version__)"`
+- **Result:** PASS.

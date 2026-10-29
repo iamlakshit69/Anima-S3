@@ -9,9 +9,9 @@ Put this file at the repo root. If your agent tool looks for a different name (f
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 0 completed; Ready for Phase 1 |
+| Current phase | Phase 1 completed; Ready for Phase 2 |
 | Last updated | 2026-10-29, Agent & Human Owner |
-| Last green test run | Phase 0 protocol tests (51/51 passed), host test passed |
+| Last green test run | Phase 0 & Phase 1 tests (83/83 passed), host test passed |
 | Blocked on | (nothing) |
 
 ### Open items (answer before the phase shown)
@@ -30,7 +30,7 @@ Put this file at the repo root. If your agent tool looks for a different name (f
 Tick a box only when its acceptance tests pass (see docs/ARCHITECTURE.md section 11).
 
 - [x] **Phase 0** Skeleton, protocol package (schema, constants, vectors, codegen), CI
-- [ ] **Phase 1** Server with fake device (real models, all scenarios green)
+- [x] **Phase 1** Server with fake device (real models, all scenarios green)
 - [ ] **Phase 2** Firmware audio loop, push-to-talk, LED UI, self-test
 - [ ] **Phase 3** Wake word, full state machine, reconnect drills
 - [ ] **Phase 4** Tools, fast-path intents, endpoint tuning

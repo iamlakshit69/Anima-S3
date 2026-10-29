@@ -90,8 +90,58 @@ cmake -S firmware/host_test -B firmware/host_test/build && ctest ...        -> 1
 ### Blocked on
 - None. Ready for Phase 1.
 
+## Entry 003 — 2026-10-29 — Phase 1 Completion (Server with Fake Device)
+
+### Done
+- Implemented complete server package (`server/anima_server`):
+  - `config.py`: typed configuration with validation invariants.
+  - `core/turn.py`: `TurnScope` managing task tracking and cancellation per turn (Rule T6).
+  - `core/sentinel.py`, `core/retry.py`, `core/metrics.py`, `core/supervisor.py`, `core/logger.py`.
+  - `audio/opus_codec.py`: `OpusDecoder` with Packet Loss Concealment (PLC) and `OpusEncoder` with re-chunking.
+  - `audio/rechunk.py`: 512-sample block re-chunker for VAD.
+  - `audio/vad.py`: `SileroVAD` and deterministic `FakeVAD`.
+  - `audio/endpointer.py`: `Endpointer` state machine with `FixedPolicy`, hysteresis, and PTT `force_end`.
+  - `audio/dsp.py`: peak normalization, RMS, trailing silence trimming, hallucination filter.
+  - `pipeline/ingest.py`: uplink frame decode and endpoint dispatch.
+  - `pipeline/stt.py`: Whisper STT stage with audio length verification.
+  - `pipeline/llm.py`: history management, streaming tokens, fallback apology, and tool execution loop.
+  - `pipeline/tts.py`: token accumulator with early first-phrase release and speech synthesizer.
+  - `pipeline/egress.py`: frame `Pacer` (1000ms lead buffer) and Opus frame downlink transmitter.
+  - `pipeline/intents.py`: fast-path intents stub.
+  - `providers/base.py` & `providers/openai_compat.py`: OpenAI/Groq compatible client.
+  - `tools/policy.py`: enforces hardcoded `FORBIDDEN_ALWAYS` tools, JSON schema checks, rate limits.
+  - `tools/registry.py`: tool registry, schema conversion, and WebSocket device proxy.
+  - `transport/protocol.py`, `transport/session.py`, `transport/ws_server.py`, `main.py`.
+  - `tools/fake_device.py`: simulated satellite with fault injection (scenarios: `normal`, `barge_in`, `no_speech`, `bad_token`, `reconnect`).
+- Implemented full test suite in `server/tests/` (32 tests):
+  - `test_config.py`, `test_turn_rules.py`, `test_endpointer.py`, `test_opus_codec.py`, `test_pacer.py`, `test_supervisor.py`, `test_tool_policy.py`, `test_device_proxy.py`, `test_integration.py`.
+- All 83 tests (32 server tests + 51 protocol tests) passing.
+
+### Tests run
+```sh
+.venv/bin/python -m pytest server/tests -v   → 32 passed in 13.56s
+.venv/bin/python -m pytest protocol/tests -v → 51 passed in 0.35s
+cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 100% passed
+```
+
+### Half-done or in progress
+- None. Phase 1 is 100% complete and accepted.
+
+### Blocked on
+- None. Ready for Phase 2.
+
 ### Next agent: start here
-- Start **Phase 1: Server with fake device**.
-- Review Architecture Plan section 6 (Server design) and section 9 (Testing strategy).
-- Server configuration will use Groq (`llama-3.3-70b-versatile`) and CPU inference for Whisper (`base.en int8`) and Kokoro TTS.
+- Start **Phase 2: Firmware audio loop (push-to-talk, LED only)**.
+- Hardware is confirmed: ESP32-S3-WROOM-1 / N16R8, INMP441 microphone, MAX98357A amplifier.
+- Target pins documented in `docs/HARDWARE.md` (avoiding GPIO 26-37 due to Octal PSRAM).
+- Firmware deliverables:
+  - Board pin configuration (`firmware/main/boards/breadboard_s3/`)
+  - I2S input (INMP441) and I2S output (MAX98357A)
+  - ESP-IDF Opus encoder (16 kHz uplink) and decoder (24 kHz downlink)
+  - WebSocket client with exponential backoff & jitter
+  - Jitter buffer (PSRAM-backed)
+  - Push-to-talk (PTT) and tap button debounce
+  - Status LED patterns (`LedUi`)
+  - Self-test mode
+
 

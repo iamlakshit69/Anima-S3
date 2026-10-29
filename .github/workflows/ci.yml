@@ -52,3 +52,4 @@ jobs:
           cmake -S firmware/host_test -B firmware/host_test/build
           cmake --build firmware/host_test/build
           ctest --test-dir firmware/host_test/build --output-on-failure
+

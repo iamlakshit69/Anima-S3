@@ -60,3 +60,4 @@
 - [ ] Confirm GPIO 48 type (single color LED vs WS2812 RGB LED)
 - [ ] Test INMP441 bit-shift and DC offset with host audio dump test
 - [ ] Verify MAX98357A gain and SD_MODE pin wiring
+

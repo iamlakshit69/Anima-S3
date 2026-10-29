@@ -5,6 +5,50 @@ Format: `## [Phase N] YYYY-MM-DD — brief title` followed by a bullet list.
 
 ---
 
+## [Phase 1] 2026-10-29 — Server with fake device
+
+### Added
+- **Core Pipeline Components**:
+  - `server/anima_server/core/turn.py`: `TurnScope` managing task tracking and cancellation per turn (Rule T6).
+  - `server/anima_server/core/sentinel.py`: Pipeline markers (`END_OF_RESPONSE`, `END_OF_SPEECH`).
+  - `server/anima_server/core/retry.py`: Exponential backoff with jitter and error tone generator.
+  - `server/anima_server/core/metrics.py`: `TurnLatency` (endpoint, STT, LLM TTFT, TTS, TTFA) and `SessionMetrics`.
+  - `server/anima_server/core/supervisor.py`: Stage supervision restarting on transient errors and terminating session on crash threshold (5 in 60s).
+- **Audio Processing & Codecs**:
+  - `server/anima_server/audio/opus_codec.py`: `OpusDecoder` with Packet Loss Concealment (PLC on 1-3 packet gaps) and `OpusEncoder` with 20ms re-chunking and zero-padding flush.
+  - `server/anima_server/audio/rechunk.py`: Fixed-size block re-chunker (512-sample blocks for VAD).
+  - `server/anima_server/audio/vad.py`: `SileroVAD` (ONNX runtime + RMS energy fallback) and deterministic `FakeVAD`.
+  - `server/anima_server/audio/endpointer.py`: `Endpointer` state machine with `FixedPolicy`, onset hysteresis, no-speech timeout, and PTT `force_end`.
+  - `server/anima_server/audio/dsp.py`: Peak normalization, RMS calculation, trailing silence trimming, Whisper hallucination filter.
+- **Pipeline Stages**:
+  - `server/anima_server/pipeline/ingest.py`: Decodes uplink Opus frames and feeds the endpointer.
+  - `server/anima_server/pipeline/stt.py`: Transcribes audio with Whisper, enforces minimum audio duration and filters hallucinations.
+  - `server/anima_server/pipeline/llm.py`: History management, streaming token accumulator, fallback apology, and tool execution loop.
+  - `server/anima_server/pipeline/tts.py`: Token accumulator with early first-phrase release and Kokoro speech synthesis.
+  - `server/anima_server/pipeline/egress.py`: `Pacer` maintaining 1000ms lead buffer and WebSocket frame transmitter.
+- **Providers & Security**:
+  - `server/anima_server/providers/openai_compat.py`: OpenAI-compatible provider supporting Groq (`llama-3.3-70b-versatile`) with model validation and streaming.
+  - `server/anima_server/tools/policy.py`: Enforces hardcoded `FORBIDDEN_ALWAYS` tools (reboot, firmware, wifi, token, factory reset), schema validation, and per-minute rate limits.
+  - `server/anima_server/tools/registry.py`: Tool discovery, OpenAI function spec export, server tool execution, and device proxying via WebSocket.
+- **Transport & Testing**:
+  - `server/anima_server/transport/ws_server.py`: Bearer token authentication, protocol negotiation, and session management.
+  - `server/anima_server/transport/session.py`: Session turn authority (Rule T1-T9), bounded queues, and reader pump.
+  - `tools/fake_device.py`: Full simulated satellite with fault injection (dropped frames, jitter, late frames after barge-in, bad tokens).
+  - 32 comprehensive tests across unit and integration scenarios (100% green).
+
+### Tests
+```sh
+.venv/bin/python -m pytest server/tests -v   → 32 passed in 13.56s
+.venv/bin/python -m pytest protocol/tests -v → 51 passed in 0.35s
+```
+
+### One-line demo command
+```sh
+PYTHONPATH=server .venv/bin/python -m pytest server/tests -v
+```
+
+---
+
 ## [Phase 0] 2026-10-29 — Skeleton and protocol package
 
 ### Added

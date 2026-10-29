@@ -19,18 +19,16 @@ For every dependency added:
 
 | Package | Version | Licence | Notes |
 |---|---|---|---|
-| `websockets` | TBD | BSD-3-Clause | WebSocket server. Verify API in Phase 1. |
-| `numpy` | TBD | BSD-3-Clause | PCM array operations. |
-| `scipy` | TBD | BSD-3-Clause | `resample_poly` for rate conversion. |
-| `faster-whisper` | TBD | MIT | STT. Wraps CTranslate2 and Whisper weights. |
-| `kokoro-onnx` | TBD | Apache-2.0 | TTS. Uses ONNX Runtime. Verify `create` API. |
-| `silero-vad` | TBD | MIT | VAD. Use ONNX path to avoid PyTorch. |
-| `openai` | TBD | Apache-2.0 | OpenAI-compatible client for Groq/Ollama/OpenAI. |
-| `opuslib` | TBD | BSD-3-Clause | Python bindings for libopus. Requires system libopus. |
-| `pydantic` | TBD | MIT | Message model validation. |
-| `jsonschema` | TBD | MIT | Validates tool argument schemas. |
-| `pyyaml` | TBD | MIT | Loads constants.yaml. |
-| `aiohttp` | TBD | Apache-2.0 | Admin HTTP API. |
+| `websockets` | 17.3 | BSD-3-Clause | WebSocket server and client. |
+| `numpy` | 2.4.6 | BSD-3-Clause | PCM array operations, RMS, normalization. |
+| `scipy` | 1.17.1 | BSD-3-Clause | Signal resampling for audio rates. |
+| `opuslib` | 3.0.1 | BSD-3-Clause | Python bindings for libopus with PLC support. |
+| `onnxruntime` | 1.31.1 | MIT | ONNX Runtime for CPU model execution. |
+| `openai` | 3.41.0 | Apache-2.0 | Groq and OpenAI compatible streaming client. |
+| `pydantic` | 2.14.1 | MIT | Configuration dataclasses and validation. |
+| `jsonschema` | 4.26.0 | MIT | Tool argument schema validation. |
+| `pyyaml` | 6.0.3 | MIT | Loads constants.yaml and tools.yaml. |
+| `aiohttp` | 3.14.5 | Apache-2.0 | Async admin HTTP API. |
 
 ## Runtime dependencies (firmware)
 

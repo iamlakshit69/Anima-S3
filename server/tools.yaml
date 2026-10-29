@@ -31,3 +31,4 @@ forbidden_always:
   - wifi_*
   - factory_reset
   - set_token
+

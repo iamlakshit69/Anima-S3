@@ -13,3 +13,4 @@ enable_testing()
 
 add_executable(test_protocol_host test_protocol_host.cc)
 add_test(NAME test_protocol_host COMMAND test_protocol_host)
+

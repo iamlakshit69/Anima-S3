@@ -32,3 +32,4 @@ Adopt **Option B**:
 ## Consequences
 - Need TLS configuration in `server/anima_server/config.py` (`ssl_certfile`, `ssl_keyfile`, or proxy header trust).
 - ESP-IDF config must enable mbedTLS in PSRAM to prevent internal RAM exhaustion.
+
