@@ -1,0 +1,95 @@
+# protocol/constants.yaml
+# Single source of truth for all ANIMA-S3 wire-protocol constants.
+# R4: One place per constant. gen.py reads this file to produce
+#     server/anima_server/transport/protocol_gen.py  and
+#     firmware/main/net/protocol_gen.h
+# Do not add magic numbers elsewhere; import or #include the generated file.
+
+protocol:
+  version: 1                  # PROTO_VERSION
+
+frame:
+  header_size: 12             # HEADER_SIZE  (bytes)
+  kind_up: 0x01               # KIND_UP    audio uplink  (device → server)
+  kind_down: 0x02             # KIND_DOWN  audio downlink (server → device)
+  flag_first: 0x01            # FLAG_FIRST  bit 0: first frame of this turn stream
+  flag_last:  0x02            # FLAG_LAST   bit 1: last frame of this turn stream
+
+audio:
+  uplink:
+    rate: 16000               # samples / second
+    channels: 1
+    frame_ms: 20
+    samples_per_frame: 320    # rate * frame_ms / 1000
+    codec: "opus"
+    bitrate_min: 16000
+    bitrate_max: 24000
+    application: "voip"
+  downlink:
+    rate: 24000
+    channels: 1
+    frame_ms: 20
+    samples_per_frame: 480    # rate * frame_ms / 1000
+    codec: "opus"
+    bitrate_min: 24000
+    bitrate_max: 32000
+    application: "voip"
+
+timing:
+  hello_timeout_s: 5          # HELLO_TIMEOUT_S   server closes if no hello within this
+  ping_interval_s: 10         # PING_INTERVAL_S   device WebSocket ping cadence
+  server_timeout_s: 30        # SERVER_TIMEOUT_S  server closes after this silence
+
+reconnect:
+  backoff_steps_s: [1, 2, 4, 8, 16, 30]   # RECONNECT_BACKOFF_S   exponential steps
+  backoff_max_s: 30                          # RECONNECT_MAX_S
+  jitter_frac: 0.20                          # RECONNECT_JITTER     up to 20 % added
+
+server:
+  pacer_lead_ms: 1000         # PACER_LEAD_MS
+  listen_timeout_ms: 6000     # LISTEN_TIMEOUT_MS   no-speech abort
+  max_turn_ms: 20000          # MAX_TURN_MS
+  fixed_silence_ms: 700       # FIXED_SILENCE_MS    FixedPolicy endpoint threshold
+  silence_max_ms: 1100        # SILENCE_MAX_MS
+  tool_timeout_ms: 2000       # TOOL_TIMEOUT_MS
+  history_turns: 10           # HISTORY_TURNS
+  llm_max_tokens: 150         # LLM_MAX_TOKENS
+  max_sessions: 2             # MAX_SESSIONS
+
+firmware:
+  prebuffer_ms: 200           # PREBUFFER_MS
+  jitter_buffer_ms: 1500      # JITTER_BUFFER_MS
+  mic_tail_ms: 300            # MIC_TAIL_MS
+  listening_limit_s: 25       # LISTENING_LIMIT_S   device-side watchdog
+
+error_codes:
+  - E_PROTO_VERSION
+  - E_AUTH
+  - E_BAD_FRAME
+  - E_STT_FAIL
+  - E_LLM_FAIL
+  - E_TTS_FAIL
+  - E_TOOL_DENIED
+  - E_TOOL_TIMEOUT
+  - E_BUSY
+  - E_INTERNAL
+
+message_types:
+  device_to_server:
+    - hello
+    - listen.start
+    - listen.end
+    - abort
+    - tool.result
+    - playback
+    - telemetry
+  server_to_device:
+    - hello_ack
+    - listen.stop
+    - stt
+    - reply
+    - tts.start
+    - tts.stop
+    - tool.call
+    - alert
+    - error

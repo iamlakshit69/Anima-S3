@@ -1,0 +1,255 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://anima-s3/protocol/schema.json",
+  "title": "ANIMA-S3 JSON message schema",
+  "description": "JSON Schema for every text-frame message in the ANIMA-S3 WebSocket protocol v1.",
+
+  "definitions": {
+    "turn": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Turn ID (u32, device-authoritative, monotonically increasing)"
+    },
+    "tool_spec": {
+      "type": "object",
+      "required": ["name", "description", "params", "risk"],
+      "properties": {
+        "name":        { "type": "string" },
+        "description": { "type": "string" },
+        "params":      { "type": "object", "description": "JSON Schema for tool arguments" },
+        "risk":        { "type": "string", "enum": ["safe", "confirm"] }
+      },
+      "additionalProperties": false
+    },
+    "ota_offer": {
+      "type": "object",
+      "required": ["version", "url", "sha256", "size"],
+      "properties": {
+        "version": { "type": "string" },
+        "url":     { "type": "string", "format": "uri" },
+        "sha256":  { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+        "size":    { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "audio_settings": {
+      "type": "object",
+      "required": ["codec", "rate", "frame_ms"],
+      "properties": {
+        "codec":    { "type": "string" },
+        "rate":     { "type": "integer", "minimum": 8000 },
+        "frame_ms": { "type": "integer", "enum": [10, 20, 40, 60] }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "oneOf": [
+    {
+      "title": "hello (device → server)",
+      "type": "object",
+      "required": ["type", "proto", "device_id", "fw", "board", "features", "audio", "tools", "last_turn"],
+      "properties": {
+        "type":      { "type": "string", "const": "hello" },
+        "proto":     { "type": "integer", "minimum": 1, "description": "Protocol version" },
+        "device_id": { "type": "string" },
+        "fw":        { "type": "string", "description": "Firmware version string" },
+        "board":     { "type": "string" },
+        "features":  { "type": "array", "items": { "type": "string" } },
+        "audio": {
+          "type": "object",
+          "required": ["up", "down"],
+          "properties": {
+            "up":   { "$ref": "#/definitions/audio_settings" },
+            "down": { "$ref": "#/definitions/audio_settings" }
+          },
+          "additionalProperties": false
+        },
+        "tools":     { "type": "array", "items": { "$ref": "#/definitions/tool_spec" } },
+        "last_turn": { "$ref": "#/definitions/turn" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "hello_ack (server → device)",
+      "type": "object",
+      "required": ["type", "proto", "session_id", "server", "listen_timeout_ms", "max_turn_ms"],
+      "properties": {
+        "type":              { "type": "string", "const": "hello_ack" },
+        "proto":             { "type": "integer", "minimum": 1 },
+        "session_id":        { "type": "string" },
+        "server":            { "type": "string", "description": "Server version string" },
+        "listen_timeout_ms": { "type": "integer", "minimum": 0 },
+        "max_turn_ms":       { "type": "integer", "minimum": 0 },
+        "ota":               { "$ref": "#/definitions/ota_offer" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "listen.start (device → server)",
+      "type": "object",
+      "required": ["type", "turn", "reason"],
+      "properties": {
+        "type":      { "type": "string", "const": "listen.start" },
+        "turn":      { "$ref": "#/definitions/turn" },
+        "reason":    { "type": "string", "enum": ["wake_word", "button", "barge_in"] },
+        "wake_word": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "listen.end (device → server, push-to-talk release)",
+      "type": "object",
+      "required": ["type", "turn"],
+      "properties": {
+        "type": { "type": "string", "const": "listen.end" },
+        "turn": { "$ref": "#/definitions/turn" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "listen.stop (server → device)",
+      "type": "object",
+      "required": ["type", "turn", "reason"],
+      "properties": {
+        "type":   { "type": "string", "const": "listen.stop" },
+        "turn":   { "$ref": "#/definitions/turn" },
+        "reason": { "type": "string", "enum": ["endpoint", "no_speech", "max_len", "error"] }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "abort (device → server)",
+      "type": "object",
+      "required": ["type", "turn"],
+      "properties": {
+        "type": { "type": "string", "const": "abort" },
+        "turn": { "$ref": "#/definitions/turn" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "stt (server → device)",
+      "type": "object",
+      "required": ["type", "turn", "text"],
+      "properties": {
+        "type": { "type": "string", "const": "stt" },
+        "turn": { "$ref": "#/definitions/turn" },
+        "text": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "reply (server → device, one per spoken sentence)",
+      "type": "object",
+      "required": ["type", "turn", "text"],
+      "properties": {
+        "type":    { "type": "string", "const": "reply" },
+        "turn":    { "$ref": "#/definitions/turn" },
+        "text":    { "type": "string" },
+        "emotion": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "tts.start (server → device)",
+      "type": "object",
+      "required": ["type", "turn"],
+      "properties": {
+        "type": { "type": "string", "const": "tts.start" },
+        "turn": { "$ref": "#/definitions/turn" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "tts.stop (server → device)",
+      "type": "object",
+      "required": ["type", "turn", "reason"],
+      "properties": {
+        "type":   { "type": "string", "const": "tts.stop" },
+        "turn":   { "$ref": "#/definitions/turn" },
+        "reason": { "type": "string", "enum": ["done", "aborted", "error"] }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "tool.call (server → device)",
+      "type": "object",
+      "required": ["type", "turn", "id", "name", "args", "timeout_ms"],
+      "properties": {
+        "type":       { "type": "string", "const": "tool.call" },
+        "turn":       { "$ref": "#/definitions/turn" },
+        "id":         { "type": "string" },
+        "name":       { "type": "string" },
+        "args":       { "type": "object" },
+        "timeout_ms": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "tool.result (device → server)",
+      "type": "object",
+      "required": ["type", "turn", "id", "ok"],
+      "properties": {
+        "type":   { "type": "string", "const": "tool.result" },
+        "turn":   { "$ref": "#/definitions/turn" },
+        "id":     { "type": "string" },
+        "ok":     { "type": "boolean" },
+        "result": {},
+        "error":  { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "playback (device → server)",
+      "type": "object",
+      "required": ["type", "turn", "event", "buffered_ms"],
+      "properties": {
+        "type":        { "type": "string", "const": "playback" },
+        "turn":        { "$ref": "#/definitions/turn" },
+        "event":       { "type": "string", "enum": ["started", "finished", "underrun", "flushed"] },
+        "buffered_ms": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "telemetry (device → server, not turn-scoped)",
+      "type": "object",
+      "required": ["type", "state", "rssi", "heap_free", "psram_free", "uptime_s"],
+      "properties": {
+        "type":       { "type": "string", "const": "telemetry" },
+        "state":      { "type": "string" },
+        "rssi":       { "type": "integer" },
+        "heap_free":  { "type": "integer", "minimum": 0 },
+        "psram_free": { "type": "integer", "minimum": 0 },
+        "uptime_s":   { "type": "integer", "minimum": 0 },
+        "battery":    { "type": "integer", "minimum": 0, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "alert (server → device, not turn-scoped)",
+      "type": "object",
+      "required": ["type", "level", "code", "text"],
+      "properties": {
+        "type":  { "type": "string", "const": "alert" },
+        "level": { "type": "string", "enum": ["info", "warn", "error"] },
+        "code":  { "type": "string" },
+        "text":  { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "error (server → device, not turn-scoped)",
+      "type": "object",
+      "required": ["type", "code", "text", "fatal"],
+      "properties": {
+        "type":  { "type": "string", "const": "error" },
+        "code":  { "type": "string" },
+        "text":  { "type": "string" },
+        "fatal": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

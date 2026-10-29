@@ -1,0 +1,343 @@
+{
+  "_comment": "ANIMA-S3 protocol test vectors. Both Python and C++ tests read this file so the two sides cannot drift apart. R6: generated files are never edited by hand; this file IS hand-authored and is the source of truth for round-trip tests.",
+  "version": 1,
+  "vectors": [
+    {
+      "id": "uplink_plain",
+      "description": "Plain uplink audio frame, no flags, turn=7, seq=42, t_ms=840, 4-byte fake opus payload",
+      "type": "binary_frame",
+      "hex": "01 00 2A 00 07 00 00 00 48 03 00 00 DE AD BE EF",
+      "expected": {
+        "kind":    1,
+        "flags":   0,
+        "seq":     42,
+        "turn":    7,
+        "t_ms":    840,
+        "opus_hex": "DEADBEEF",
+        "opus_len": 4
+      }
+    },
+    {
+      "id": "uplink_first",
+      "description": "Uplink frame with FLAG_FIRST set (bit0), turn=1, seq=0, t_ms=0, 3-byte opus payload",
+      "type": "binary_frame",
+      "hex": "01 01 00 00 01 00 00 00 00 00 00 00 AA BB CC",
+      "expected": {
+        "kind":    1,
+        "flags":   1,
+        "seq":     0,
+        "turn":    1,
+        "t_ms":    0,
+        "opus_hex": "AABBCC",
+        "opus_len": 3
+      }
+    },
+    {
+      "id": "uplink_last",
+      "description": "Uplink frame with FLAG_LAST set (bit1), turn=3, seq=99, t_ms=1980, 2-byte opus payload",
+      "type": "binary_frame",
+      "hex": "01 02 63 00 03 00 00 00 BC 07 00 00 FF 00",
+      "expected": {
+        "kind":    1,
+        "flags":   2,
+        "seq":     99,
+        "turn":    3,
+        "t_ms":    1980,
+        "opus_hex": "FF00",
+        "opus_len": 2
+      }
+    },
+    {
+      "id": "uplink_first_and_last",
+      "description": "Uplink frame with both FLAG_FIRST and FLAG_LAST (single-frame turn), turn=5, seq=0, t_ms=20, 1-byte opus payload",
+      "type": "binary_frame",
+      "hex": "01 03 00 00 05 00 00 00 14 00 00 00 C0",
+      "expected": {
+        "kind":    1,
+        "flags":   3,
+        "seq":     0,
+        "turn":    5,
+        "t_ms":    20,
+        "opus_hex": "C0",
+        "opus_len": 1
+      }
+    },
+    {
+      "id": "downlink_plain",
+      "description": "Downlink audio frame from server to device, turn=7, seq=10, t_ms=200, 4-byte fake opus payload",
+      "type": "binary_frame",
+      "hex": "02 00 0A 00 07 00 00 00 C8 00 00 00 01 02 03 04",
+      "expected": {
+        "kind":    2,
+        "flags":   0,
+        "seq":     10,
+        "turn":    7,
+        "t_ms":    200,
+        "opus_hex": "01020304",
+        "opus_len": 4
+      }
+    },
+    {
+      "id": "msg_hello",
+      "description": "hello message from device to server",
+      "type": "json_message",
+      "json": {
+        "type": "hello",
+        "proto": 1,
+        "device_id": "aabbccdd1122",
+        "fw": "0.1.0",
+        "board": "breadboard_s3",
+        "features": ["push_to_talk"],
+        "audio": {
+          "up":   {"codec": "opus", "rate": 16000, "frame_ms": 20},
+          "down": {"codec": "opus", "rate": 24000, "frame_ms": 20}
+        },
+        "tools": [
+          {"name": "set_volume", "description": "Set speaker volume 0-100",
+           "params": {"type": "object", "properties": {"level": {"type": "integer", "minimum": 0, "maximum": 100}}, "required": ["level"]},
+           "risk": "safe"}
+        ],
+        "last_turn": 0
+      },
+      "expected": {
+        "type": "hello",
+        "proto": 1,
+        "device_id": "aabbccdd1122"
+      }
+    },
+    {
+      "id": "msg_hello_ack",
+      "description": "hello_ack from server to device",
+      "type": "json_message",
+      "json": {
+        "type": "hello_ack",
+        "proto": 1,
+        "session_id": "sess-001",
+        "server": "anima-server 0.1.0",
+        "listen_timeout_ms": 6000,
+        "max_turn_ms": 20000
+      },
+      "expected": {
+        "type": "hello_ack",
+        "proto": 1,
+        "session_id": "sess-001"
+      }
+    },
+    {
+      "id": "msg_listen_start",
+      "description": "listen.start sent by device after wake word",
+      "type": "json_message",
+      "json": {
+        "type": "listen.start",
+        "turn": 7,
+        "reason": "wake_word",
+        "wake_word": "hey anima"
+      },
+      "expected": {
+        "type": "listen.start",
+        "turn": 7,
+        "reason": "wake_word"
+      }
+    },
+    {
+      "id": "msg_listen_end",
+      "description": "listen.end sent by device on push-to-talk release",
+      "type": "json_message",
+      "json": {
+        "type": "listen.end",
+        "turn": 7
+      },
+      "expected": {
+        "type": "listen.end",
+        "turn": 7
+      }
+    },
+    {
+      "id": "msg_listen_stop",
+      "description": "listen.stop sent by server after endpointing",
+      "type": "json_message",
+      "json": {
+        "type": "listen.stop",
+        "turn": 7,
+        "reason": "endpoint"
+      },
+      "expected": {
+        "type": "listen.stop",
+        "turn": 7,
+        "reason": "endpoint"
+      }
+    },
+    {
+      "id": "msg_abort",
+      "description": "abort sent by device to cancel the current turn",
+      "type": "json_message",
+      "json": {
+        "type": "abort",
+        "turn": 7
+      },
+      "expected": {
+        "type": "abort",
+        "turn": 7
+      }
+    },
+    {
+      "id": "msg_stt",
+      "description": "stt result from server",
+      "type": "json_message",
+      "json": {
+        "type": "stt",
+        "turn": 7,
+        "text": "turn on the lamp"
+      },
+      "expected": {
+        "type": "stt",
+        "turn": 7,
+        "text": "turn on the lamp"
+      }
+    },
+    {
+      "id": "msg_reply",
+      "description": "reply from server (one per spoken sentence)",
+      "type": "json_message",
+      "json": {
+        "type": "reply",
+        "turn": 7,
+        "text": "Sure, turning the lamp on now.",
+        "emotion": "helpful"
+      },
+      "expected": {
+        "type": "reply",
+        "turn": 7
+      }
+    },
+    {
+      "id": "msg_tts_start",
+      "description": "tts.start from server before audio frames",
+      "type": "json_message",
+      "json": {
+        "type": "tts.start",
+        "turn": 7
+      },
+      "expected": {
+        "type": "tts.start",
+        "turn": 7
+      }
+    },
+    {
+      "id": "msg_tts_stop",
+      "description": "tts.stop from server after last audio frame",
+      "type": "json_message",
+      "json": {
+        "type": "tts.stop",
+        "turn": 7,
+        "reason": "done"
+      },
+      "expected": {
+        "type": "tts.stop",
+        "turn": 7,
+        "reason": "done"
+      }
+    },
+    {
+      "id": "msg_tool_call",
+      "description": "tool.call from server to device",
+      "type": "json_message",
+      "json": {
+        "type": "tool.call",
+        "turn": 7,
+        "id": "a1b2c3",
+        "name": "set_volume",
+        "args": {"level": 40},
+        "timeout_ms": 2000
+      },
+      "expected": {
+        "type": "tool.call",
+        "turn": 7,
+        "name": "set_volume"
+      }
+    },
+    {
+      "id": "msg_tool_result",
+      "description": "tool.result from device to server",
+      "type": "json_message",
+      "json": {
+        "type": "tool.result",
+        "turn": 7,
+        "id": "a1b2c3",
+        "ok": true,
+        "result": {"volume": 40}
+      },
+      "expected": {
+        "type": "tool.result",
+        "turn": 7,
+        "id": "a1b2c3",
+        "ok": true
+      }
+    },
+    {
+      "id": "msg_playback",
+      "description": "playback event from device",
+      "type": "json_message",
+      "json": {
+        "type": "playback",
+        "turn": 7,
+        "event": "finished",
+        "buffered_ms": 0
+      },
+      "expected": {
+        "type": "playback",
+        "turn": 7,
+        "event": "finished"
+      }
+    },
+    {
+      "id": "msg_telemetry",
+      "description": "telemetry report from device (not turn-scoped)",
+      "type": "json_message",
+      "json": {
+        "type": "telemetry",
+        "state": "IDLE",
+        "rssi": -55,
+        "heap_free": 204800,
+        "psram_free": 4194304,
+        "uptime_s": 3600
+      },
+      "expected": {
+        "type": "telemetry",
+        "state": "IDLE"
+      }
+    },
+    {
+      "id": "msg_alert",
+      "description": "alert from server (not turn-scoped)",
+      "type": "json_message",
+      "json": {
+        "type": "alert",
+        "level": "warn",
+        "code": "stage_restart",
+        "text": "ingest stage restarting"
+      },
+      "expected": {
+        "type": "alert",
+        "level": "warn",
+        "code": "stage_restart"
+      }
+    },
+    {
+      "id": "msg_error",
+      "description": "error from server (not turn-scoped)",
+      "type": "json_message",
+      "json": {
+        "type": "error",
+        "code": "E_PROTO_VERSION",
+        "text": "Unsupported protocol version",
+        "fatal": true
+      },
+      "expected": {
+        "type": "error",
+        "code": "E_PROTO_VERSION",
+        "fatal": true
+      }
+    }
+  ]
+}

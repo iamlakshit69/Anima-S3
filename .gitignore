@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.env
+!.env.example
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+*.log
+
+# C / C++
+*.o
+*.a
+*.d
+*.elf
+*.bin
+*.map
+*.lst
+*.out
+
+# ESP-IDF
+firmware/build/
+firmware/sdkconfig
+firmware/managed_components/
+firmware/.idf_version
+firmware/dependencies.lock
+firmware/host_test/build/
+firmware/host_test/build_host/
+
+# Generated protocol files (regenerate with `python3 protocol/gen.py`)
+# These ARE committed so CI can check them; remove this comment if you prefer not to commit them.
+# server/anima_server/transport/protocol_gen.py
+# firmware/main/net/protocol_gen.h
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Secrets — NEVER commit real values
+# .env files are already excluded above; add others here if needed

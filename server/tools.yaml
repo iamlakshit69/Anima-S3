@@ -1,0 +1,33 @@
+# Tool allowlist, policy limits, and forbidden capabilities
+# Single source of truth for tool security rules (see Architecture Section 6.10 & Notes R7)
+
+device:
+  set_volume:
+    risk: safe
+    rate_per_min: 30
+    description: "Set speaker volume level between 0 and 100"
+  set_brightness:
+    risk: safe
+    rate_per_min: 30
+    description: "Set screen brightness between 0 and 100"
+  lamp_set:
+    risk: safe
+    rate_per_min: 20
+    description: "Turn the lamp relay on or off"
+  get_status:
+    risk: safe
+    rate_per_min: 30
+    description: "Get device status: battery, volume, wifi rssi"
+
+server:
+  time.now:
+    risk: safe
+    description: "Get current server time"
+
+# Capabilities strictly forbidden to the LLM (enforced in server and device code)
+forbidden_always:
+  - reboot
+  - upgrade_firmware
+  - wifi_*
+  - factory_reset
+  - set_token
