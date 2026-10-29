@@ -126,3 +126,21 @@
   Import path: `from anima_server.pipeline.emotion import classify as classify_emotion`.
 - **Command or test used:** `PYTHONPATH=server .venv/bin/python -m pytest server/tests/test_emotion.py -q`
 - **Result:** 22/22 passed.
+
+## Phase 7 additions
+
+## ssl (Python stdlib)
+
+- **Version verified:** Python 3.11 stdlib `ssl` module
+- **Date:** 2026-10-29
+- **Phase:** 7
+- **Call / behaviour verified:** `ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)`, `load_cert_chain(certfile, keyfile=keyfile)`; used in `server/anima_server/main.py` when `SSL_CERTFILE` is provided.
+- **Result:** PASS.
+
+## faster-whisper partial transcripts
+
+- **Version verified:** faster-whisper (batched / segment level)
+- **Date:** 2026-10-29
+- **Phase:** 7
+- **Call / behaviour verified:** `faster-whisper` produces final segments after full audio or chunks; does not emit live streaming token deltas without streaming VAD slice loop. `session.partial_stt_text` is plumbed into `Endpointer.feed(..., partial_text=...)` for future streaming STT engines.
+- **Result:** PASS.

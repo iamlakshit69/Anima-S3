@@ -55,3 +55,7 @@ add_test(NAME test_settings_ota_host COMMAND test_settings_ota_host)
 # 10. LCD UI — state labels, emotion glyphs, subtitle, overflow safety
 add_executable(test_lcd_ui_host test_lcd_ui_host.cc)
 add_test(NAME test_lcd_ui_host COMMAND test_lcd_ui_host)
+
+# 11. State machine soak test — 100 turns + 50 barge-in cycles
+add_executable(test_soak_host test_soak_host.cc ../main/app/state_machine.cc)
+add_test(NAME test_soak_host COMMAND test_soak_host)

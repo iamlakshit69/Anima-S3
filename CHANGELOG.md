@@ -5,6 +5,57 @@ Format: `## [Phase N] YYYY-MM-DD — brief title` followed by a bullet list.
 
 ---
 
+## [Phase 7] 2026-10-29 — Hardening, soak testing, diagnostics, packaging, and user guide
+
+### Added
+- **`server/anima_server/diagnostics/` (`anima_check.py`)** — Port of ANIMA health checker
+  architecture (§6.13). Features:
+  - `ConfigCollector`: Validates all configuration invariants.
+  - `SttCollector`: Exercises Whisper transcription using test audio arrays.
+  - `LlmCollector`: Verifies provider API key and model parameters without invoking paid APIs.
+  - `TtsCollector`: Tests speech synthesis generation with Kokoro TTS.
+  - `WsLoopbackCollector`: Validates WebSocket transport configuration.
+  - Health gates: Evaluates `ttfa_p50_s` against warning (1.5s) and failure (2.5s) thresholds.
+  - Formatted text report generator and `diff_reports` utility to track health differences.
+- **`server/tests/test_diagnostics.py`** — 10 unit tests for all diagnostic collectors, report
+  generation, report rendering, and report diffing.
+- **`tools/soak_test.py`** — Automated soak testing script running configurable iterations (default 20)
+  of complete dialogue turns against an in-process fake server. Computes TTFA p50 and p95 metrics and
+  monitors stability.
+- **`firmware/host_test/test_soak_host.cc`** — C++ host test executing 100 continuous dialogue cycles
+  and 50 barge-in cycles across the table-driven state machine, verifying memory stability and
+  deterministic transition handling.
+- **`docs/WSS_SETUP.md`** — Comprehensive TLS/WSS setup guide with self-signed certificate generation,
+  Let's Encrypt instructions, server configuration, and ESP-IDF CA certificate embedding.
+- **Docker & systemd packaging**:
+  - `server/Dockerfile`: Container image based on `python:3.11-slim` with system `libopus`.
+  - `server/docker-compose.yml`: Multi-service compose file with cache volume mounting.
+  - `server/requirements.txt`: Frozen production requirements list.
+  - `server/anima_server.service`: Hardened systemd service unit with `NoNewPrivileges` and isolation.
+- **`docs/USER_GUIDE.md`** — Complete user guide detailing hardware requirements, pinout reference,
+  native & containerized server setup, firmware flashing guidelines, provisioning, daily operations,
+  OTA process, and troubleshooting.
+- **`ci.sh`** — Root continuous integration runner executing protocol vector tests, server test suite,
+  C++ host test suite, and system diagnostics.
+
+### Changed
+- **`server/anima_server/audio/endpointer.py`**: Added `partial_text` parameter to `Endpointer.feed()`,
+  routing partial transcripts into `SemanticPolicy.decide()`.
+- **`server/anima_server/pipeline/ingest.py`**: Wired `partial_text` feed using `session.partial_stt_text`.
+- **`server/anima_server/transport/session.py`**: Added `partial_stt_text` attribute placeholder.
+- **`firmware/host_test/CMakeLists.txt`**: Registered `test_soak_host` (11th test executable).
+
+### Test run (2026-10-29)
+```
+C++ host tests : ctest --test-dir firmware/host_test/build → 11/11 passed (100%)
+Python server  : PYTHONPATH=server pytest server/tests     → 89/89 passed (100%)
+Protocol tests : PYTHONPATH=. pytest protocol/tests       → 51/51 passed (100%)
+Soak test      : python tools/soak_test.py --turns 5       → 5/5 turns passed (TTFA p50=0.025s)
+CI runner      : ./ci.sh                                   → ALL TEST SUITES PASSED (GREEN)
+```
+
+---
+
 ## [Phase 6] 2026-10-29 — LCD UI, emotion classification, and semantic endpointing
 
 ### Added

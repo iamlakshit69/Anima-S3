@@ -373,3 +373,53 @@ PYTHONPATH=. .venv/bin/python -m pytest protocol/tests -q      → 51/51 passed
 - Wire partial transcript from STT to `Endpointer.feed()` so `SemanticPolicy` sees live text.
 - Confirm LCD GPIO wiring with the human, write to `docs/HARDWARE.md`, then implement the
   SPI pixel renderer in `lcd_ui.h` / `lcd_ui.cc`.
+
+---
+
+## Entry 009 — 2026-10-29 — Phase 7 Completion (Hardening, Soak, Packaging, Diagnostics, User Guide)
+
+**Date:** 2026-10-29
+**Agent:** Antigravity coding agent
+**Phase:** 7 (Project v1 complete)
+
+### What was done
+
+#### Diagnostics & Health Checking
+- `server/anima_server/diagnostics/` (`anima_check.py`): Complete health check suite with collectors for `config`, `stt`, `llm`, `tts`, and `ws_loopback`.
+- Health gates for TTFA (warning at 1.5s, failure at 2.5s).
+- Text report rendering and `diff_reports` tool.
+- Unit tests in `server/tests/test_diagnostics.py` (10/10 passing).
+
+#### Soak Testing & Stability
+- `tools/soak_test.py`: Simulated satellite test runner using `FakeDevice` pattern. Executes configurable turns, measures TTFA p50/p95, validates heap stability.
+- `firmware/host_test/test_soak_host.cc`: C++ state machine soak test running 100 consecutive dialogue cycles and 50 barge-in cycles. Registered as host test #11.
+
+#### Partial STT & Semantic Endpointing
+- `server/anima_server/audio/endpointer.py`: Extended `Endpointer.feed()` with optional `partial_text` parameter.
+- `server/anima_server/pipeline/ingest.py`: Connected `session.partial_stt_text` feed to endpointer.
+
+#### Packaging & Deployment
+- `server/Dockerfile`: Multi-stage Python 3.11-slim container with `libopus`.
+- `server/docker-compose.yml`: Compose specification with persistent model caching.
+- `server/requirements.txt`: Frozen production dependency list.
+- `server/anima_server.service`: Hardened systemd service file with read-only root and private tmp.
+- `docs/WSS_SETUP.md`: TLS/WSS certificate guide (self-signed & Let's Encrypt) and ESP32 CA setup.
+
+#### Documentation & Continuous Integration
+- `docs/USER_GUIDE.md`: Comprehensive user guide covering hardware setup, pinout, installation, provisioning, OTA, and troubleshooting.
+- `ci.sh`: Master continuous integration runner executing protocol tests, server tests, C++ host tests, and diagnostics.
+- Updated `CHANGELOG.md`, `AGENTS.md`, and `Notes for agents.md` marking Phase 7 and v1 complete.
+
+### Tests run
+```sh
+./ci.sh
+  1. Protocol vector tests : 51/51 passed
+  2. Server test suite     : 89/89 passed (including 10 diagnostics tests)
+  3. C++ Host tests        : 11/11 passed (including state machine soak test)
+  4. Diagnostics check     : Completed successfully
+python tools/soak_test.py  : 5/5 turns passed (TTFA p50=0.025s)
+```
+
+### v1 Status
+- All 7 phases (0 through 7) are 100% complete with passing acceptance tests.
+- Status board updated in `AGENTS.md` and `Notes for agents.md`.

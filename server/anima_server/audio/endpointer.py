@@ -112,8 +112,15 @@ class Endpointer:
         self.silence_ms = 0
         self.rechunk = Rechunker(self.BLOCK_SAMPLES)
 
-    def feed(self, pcm: np.ndarray) -> EndpointResult | None:
-        """Feeds PCM samples (16kHz int16 or float32) into the endpointer."""
+    def feed(self, pcm: np.ndarray, partial_text: str | None = None) -> EndpointResult | None:
+        """Feeds PCM samples (16kHz int16 or float32) into the endpointer.
+
+        Args:
+            pcm: Raw PCM audio (int16 or float32).
+            partial_text: Optional partial transcript from a streaming STT stage.
+                Used by SemanticPolicy to decide early endpoint. Pass None when
+                no partial transcript is available (e.g. faster-whisper final-only mode).
+        """
         if len(pcm) == 0:
             return None
 
@@ -138,7 +145,7 @@ class Endpointer:
                     return EndpointResult(reason="no_speech")
             else:
                 self.silence_ms = 0 if is_speech else (self.silence_ms + self.BLOCK_MS)
-                if self.policy.decide(self.silence_ms, self.speech_ms, None) == "END":
+                if self.policy.decide(self.silence_ms, self.speech_ms, partial_text) == "END":
                     audio = np.concatenate(self.blocks) if self.blocks else np.zeros(0, dtype=np.int16)
                     return EndpointResult(reason="endpoint", audio=audio)
                 if self.total_ms >= self.cfg.max_turn_ms:

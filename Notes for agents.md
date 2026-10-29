@@ -9,9 +9,9 @@ Put this file at the repo root. If your agent tool looks for a different name (f
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 6 completed; Ready for Phase 7 |
+| Current phase | Phase 7 completed; Project v1 complete |
 | Last updated | 2026-10-29, Agent & Human Owner |
-| Last green test run | Phase 0–6 tests (79/79 Python server + 51/51 protocol + 10/10 C++ host tests) |
+| Last green test run | Phase 0–7 tests (89/89 Python server + 51/51 protocol + 11/11 C++ host tests) |
 | Blocked on | (nothing) |
 
 ### Open items (answer before the phase shown)
@@ -36,7 +36,7 @@ Tick a box only when its acceptance tests pass (see docs/ARCHITECTURE.md section
 - [x] **Phase 4** Tools, fast-path intents, endpoint tuning
 - [x] **Phase 5** Provisioning, settings, OTA with rollback, admin API
 - [x] **Phase 6** LCD UI, emotion, semantic endpointing
-- [ ] **Phase 7** Hardening, soak, packaging
+- [x] **Phase 7** Hardening, soak, packaging
 
 ---
 

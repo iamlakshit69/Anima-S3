@@ -1,0 +1,13 @@
+websockets
+numpy
+scipy
+faster-whisper
+kokoro-onnx
+silero-vad
+openai
+opuslib
+pydantic
+jsonschema
+pyyaml
+aiohttp
+

@@ -81,6 +81,12 @@ class Session:
         self.latency = TurnLatency(turn=self.current_turn, session_id=self.id)
         self.history: List[Dict[str, Any]] = []
         self.telemetry: Optional[Dict[str, Any]] = None
+        # Partial STT text for SemanticPolicy (None until a partial is available).
+        # faster-whisper does not produce real-time partial transcripts in this
+        # integration (final segments only). This field is wired so that a future
+        # partial-STT stage can populate it and SemanticPolicy will see it.
+        # See docs/VERIFIED.md — Phase 7 faster-whisper partial transcripts entry.
+        self.partial_stt_text: Optional[str] = None
 
         # Codecs
         try:

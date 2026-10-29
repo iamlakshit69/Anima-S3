@@ -1,0 +1,33 @@
+version: "3.9"
+
+# server/docker-compose.yml — ANIMA-S3 server compose file.
+#
+# Usage:
+#   cd server
+#   docker-compose up -d
+#
+# Prerequisites:
+#   - server/.env file with all environment variables (copy from .env.example)
+#   - TLS certificates if SSL_CERTFILE / SSL_KEYFILE are set in .env
+
+services:
+  anima-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: anima-server:latest
+    env_file:
+      - .env
+    ports:
+      - "8765:8765"   # Device WebSocket (ws:// or wss://)
+      - "8766:8766"   # Admin HTTP API
+    restart: unless-stopped
+    volumes:
+      # Mount TLS certs if configured (optional — comment out if not using TLS)
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+      # Mount model cache for Whisper / Kokoro (avoids re-download on restart)
+      - anima_model_cache:/root/.cache
+
+volumes:
+  anima_model_cache:
+

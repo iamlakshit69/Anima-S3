@@ -32,7 +32,7 @@ async def ingest_stage(session: Any) -> None:
         if session.endpointer is None:
             continue
 
-        res = session.endpointer.feed(pcm)
+        res = session.endpointer.feed(pcm, partial_text=getattr(session, "partial_stt_text", None))
         if res is None:
             continue
 

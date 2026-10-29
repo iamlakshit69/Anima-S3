@@ -1,0 +1,38 @@
+# server/anima_server.service — systemd unit for the ANIMA-S3 server.
+#
+# Install:
+#   sudo cp server/anima_server.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable anima_server
+#   sudo systemctl start anima_server
+#
+# View logs:
+#   journalctl -u anima_server -f
+
+[Unit]
+Description=ANIMA-S3 Voice Assistant Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=anima
+Group=anima
+WorkingDirectory=/opt/anima/server
+EnvironmentFile=/opt/anima/server/.env
+ExecStart=/opt/anima/.venv/bin/python -m anima_server.main
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anima-server
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target
+
