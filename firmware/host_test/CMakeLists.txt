@@ -43,3 +43,7 @@ add_test(NAME test_diag_host COMMAND test_diag_host)
 # 7. Wake word detector test
 add_executable(test_wake_word_host test_wake_word_host.cc ../main/audio/wake_word.cc)
 add_test(NAME test_wake_word_host COMMAND test_wake_word_host)
+
+# 8. Device tool registry & forbidden check
+add_executable(test_tools_host test_tools_host.cc ../main/sys/tools.cc ../main/sys/settings.cc)
+add_test(NAME test_tools_host COMMAND test_tools_host)

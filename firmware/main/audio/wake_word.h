@@ -47,3 +47,4 @@ private:
     char model_name_[32];
     void* afe_data_;
 };
+

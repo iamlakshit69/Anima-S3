@@ -18,6 +18,7 @@ DeviceSettings Settings::s_current = {
     .wifi_ssid = "MyHomeWiFi",
     .wifi_pass = "",
     .volume = 70,
+    .brightness = 80,
     .wake_enabled = true
 };
 
@@ -53,3 +54,6 @@ void Settings::set_volume(uint8_t vol) {
     s_current.volume = (vol > 100) ? 100 : vol;
 }
 
+void Settings::set_brightness(uint8_t br) {
+    s_current.brightness = (br > 100) ? 100 : br;
+}

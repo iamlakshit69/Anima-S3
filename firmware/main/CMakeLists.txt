@@ -14,6 +14,7 @@ idf_component_register(
         "net/ws_client.cc"
         "sys/buttons.cc"
         "sys/settings.cc"
+        "sys/tools.cc"
         "sys/diag.cc"
         "ui/led_ui.cc"
     INCLUDE_DIRS

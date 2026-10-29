@@ -130,3 +130,4 @@ void WakeWordDetector::reset() {
     armed_ = false;
     detected_ = false;
 }
+

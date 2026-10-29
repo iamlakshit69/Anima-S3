@@ -44,6 +44,9 @@ public:
     void start_ota() override;
     void ota_done() override;
 
+    // Tool execution
+    void on_tool_call(uint32_t turn, const char* call_id, const char* name, const char* args_json);
+
     // Turn and state accessors
     uint32_t current_turn() const { return turn_; }
     DeviceState current_state() const { return state_; }

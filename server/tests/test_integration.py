@@ -224,3 +224,96 @@ async def test_scenario_disconnect_mid_stream(server_port):
 
     # Allow server to process disconnect cleanly
     await asyncio.sleep(0.3)
+
+
+class ToolCallingLLM:
+    def __init__(self):
+        self.tool_call_issued = False
+
+    async def validate(self):
+        pass
+
+    async def stream(self, messages, tools, scope):
+        has_tool_res = any(m.get("role") == "tool" for m in messages)
+        if not has_tool_res:
+            self.tool_call_issued = True
+            yield ToolCall(id="call_lamp_1", name="lamp_set", args={"on": True})
+        else:
+            for word in ["The", "lamp", "is", "now", "on."]:
+                if scope.is_cancelled():
+                    break
+                yield TextDelta(word + " ")
+                await asyncio.sleep(0.01)
+        yield Done(reason="stop")
+
+
+@pytest.mark.asyncio
+async def test_scenario_tool_call_end_to_end():
+    cfg = Config(
+        host="127.0.0.1",
+        port=0,
+        device_tokens={"esp32s3-fake-01": "secret-test-token"},
+        min_audio_ms=100,
+        fixed_silence_ms=100,
+        listen_timeout_ms=500,
+        tool_timeout_ms=1000,
+    )
+    models = await ModelHub.load(cfg, use_fakes=True)
+    provider = ToolCallingLLM()
+    ws_server = WsServer(cfg, models, provider)
+
+    server = await websockets.serve(
+        ws_server.handle_connection,
+        cfg.host,
+        0,
+        ping_interval=10,
+        ping_timeout=30,
+    )
+    port = server.sockets[0].getsockname()[1]
+    url = f"ws://127.0.0.1:{port}/v1/device"
+
+    dev = FakeDevice(url=url, token="secret-test-token", device_id="esp32s3-fake-01")
+    await dev.connect()
+    # Handshake with lamp_set tool
+    tools = [
+        {
+            "name": "lamp_set",
+            "description": "Turn lamp on or off",
+            "params": {"type": "object", "properties": {"on": {"type": "boolean"}}, "required": ["on"]},
+            "risk": "safe",
+        }
+    ]
+    dev.turn = 1
+    hello_msg = {
+        "type": "hello",
+        "proto": 1,
+        "device_id": "esp32s3-fake-01",
+        "fw": "1.0.0",
+        "board": "esp32s3",
+        "features": ["opus", "tools"],
+        "last_turn": 0,
+        "tools": tools,
+    }
+    await dev.send_json(hello_msg)
+    raw_ack = await asyncio.wait_for(dev.ws.recv(), timeout=5.0)
+    assert raw_ack is not None
+
+    reader = asyncio.create_task(dev.reader_loop())
+    try:
+        await dev.send_json({"type": "listen.start", "turn": 1, "reason": "wake_word"})
+        pcm = generate_synthetic_speech(duration_s=0.5)
+        await dev.stream_pcm_uplink(pcm, turn=1)
+
+        await asyncio.wait_for(dev._listen_stop_event.wait(), timeout=3.0)
+        await asyncio.sleep(1.0)
+
+        types = [getattr(m, "type", m.get("type") if isinstance(m, dict) else None) for m in dev.received_messages]
+        assert "tool.call" in types
+        assert "reply" in types
+        assert len(dev.received_audio_frames) > 0
+        assert provider.tool_call_issued is True
+    finally:
+        reader.cancel()
+        await dev.close()
+        server.close()
+        await server.wait_closed()

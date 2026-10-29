@@ -9,9 +9,9 @@ Put this file at the repo root. If your agent tool looks for a different name (f
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 3 completed; Ready for Phase 4 |
+| Current phase | Phase 4 completed; Ready for Phase 5 |
 | Last updated | 2026-10-29, Agent & Human Owner |
-| Last green test run | Phase 0, 1, 2, 3 tests (85/85 Python + 7/7 C++ host tests passed) |
+| Last green test run | Phase 0, 1, 2, 3, 4 tests (94/94 Python + 8/8 C++ host tests passed) |
 | Blocked on | (nothing) |
 
 ### Open items (answer before the phase shown)
@@ -33,7 +33,7 @@ Tick a box only when its acceptance tests pass (see docs/ARCHITECTURE.md section
 - [x] **Phase 1** Server with fake device (real models, all scenarios green)
 - [x] **Phase 2** Firmware audio loop, push-to-talk, LED UI, self-test
 - [x] **Phase 3** Wake word, full state machine, reconnect drills
-- [ ] **Phase 4** Tools, fast-path intents, endpoint tuning
+- [x] **Phase 4** Tools, fast-path intents, endpoint tuning
 - [ ] **Phase 5** Provisioning, settings, OTA with rollback, admin API
 - [ ] **Phase 6** LCD UI, emotion, semantic endpointing
 - [ ] **Phase 7** Hardening, soak, packaging

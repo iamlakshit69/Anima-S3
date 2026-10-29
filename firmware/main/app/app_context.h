@@ -27,3 +27,4 @@ public:
     virtual void start_ota() = 0;
     virtual void ota_done() = 0;
 };
+

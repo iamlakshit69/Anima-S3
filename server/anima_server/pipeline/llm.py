@@ -10,6 +10,7 @@ from typing import Any, Dict, List
 
 from anima_server.core.retry import retry_with_backoff
 from anima_server.core.sentinel import END_OF_RESPONSE
+from anima_server.pipeline import intents
 from anima_server.providers.base import Done, TextDelta, ToolCall
 
 log = logging.getLogger("anima.pipeline.llm")
@@ -42,6 +43,13 @@ async def llm_stage(session: Any) -> None:
         if session.is_stale(turn):
             session.metrics.inc_stale("llm")
             continue
+
+        # Fast-path intent matching (Architecture Section 6.9: skip LLM)
+        if getattr(session.cfg, "fast_path_intents", True):
+            hit = intents.match(text, session)
+            if hit:
+                await intents.run(hit, session, turn)
+                continue
 
         session.history.append({"role": "user", "content": text})
 

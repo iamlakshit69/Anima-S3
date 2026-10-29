@@ -13,6 +13,7 @@ struct DeviceSettings {
     char wifi_ssid[33];
     char wifi_pass[65];
     uint8_t volume;
+    uint8_t brightness;
     bool wake_enabled;
 };
 
@@ -23,8 +24,8 @@ public:
     static bool save(const DeviceSettings& in);
     static const DeviceSettings& get();
     static void set_volume(uint8_t vol);
+    static void set_brightness(uint8_t br);
 
 private:
     static DeviceSettings s_current;
 };
-

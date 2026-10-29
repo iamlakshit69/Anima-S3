@@ -5,6 +5,39 @@ Format: `## [Phase N] YYYY-MM-DD — brief title` followed by a bullet list.
 
 ---
 
+## [Phase 4] 2026-10-29 — Tools, fast-path intents, endpoint tuning
+
+### Added
+- **Device Tool Registry & Security Allowlist**:
+  - `firmware/main/sys/tools.h`/`.cc`: Implemented device-side tool registry with strict risk gating (`ToolRisk::SAFE`) and forbidden capability blocking (Rule R7: `reboot`, `upgrade_firmware`, `wifi_*`, `factory_reset`, `set_token`).
+  - Added 4 safe hardware tools:
+    - `set_volume`: Speaker volume control with [0, 100] clamping.
+    - `set_brightness`: Screen brightness control with [0, 100] clamping.
+    - `lamp_set`: Relay switching (PIN 18, default low at boot) with device-side rate limiting (max 10 toggles/min).
+    - `get_status`: Telemetry reporting (battery percentage, current volume, Wi-Fi RSSI).
+  - Wired `App::on_tool_call` with turn matching, argument validation, and `tool.result` responses.
+  - `firmware/host_test/test_tools_host.cc`: Added host tests verifying tool lookups, parameter clamping, schema validation errors, and rejection of forbidden and unlisted tools.
+- **Fast-Path Intent Engine**:
+  - `server/anima_server/pipeline/intents.py`: Pattern-matched regex engine for high-frequency commands:
+    - Volume adjustments: "volume up", "volume down", "set volume to N" (relative steps and absolute values).
+    - Appliance control: "turn on/off the lamp", "switch on/off the light".
+    - System status & time: "what time is it", "tell me the time".
+    - Conversational stop: "stop", "be quiet", "cancel" (aborts playback/turn without speech).
+  - Bypasses LLM round-trip: directly triggers tool execution via device proxy, formats canned spoken replies, and pushes immediately to TTS `token_q`.
+  - Wired into `llm_stage` in `server/anima_server/pipeline/llm.py` before provider call; respects `cfg.fast_path_intents` flag.
+  - `server/tests/test_intents.py`: Added 6 unit tests covering regex patterns, tool execution, canned reply generation, and LLM bypass verification.
+- **Device Proxy & End-to-End Integration**:
+  - `server/tests/test_device_proxy.py`: Added tests for `E_TOOL_DENIED` and ignoring late results arriving after timeout.
+  - `server/tests/test_integration.py`: Added `test_scenario_tool_call_end_to_end` asserting full two-round LLM tool invocation (`lamp_set` -> device proxy -> `tool.call` -> `tool.result` -> assistant reply audio).
+
+### Tests
+```sh
+cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 8/8 host tests passed (100%)
+.venv/bin/python -m pytest server/tests protocol/tests -q           → 94/94 tests passed (100%)
+```
+
+---
+
 ## [Phase 3] 2026-10-29 — Wake word, full state machine, reconnect drills
 
 ### Added

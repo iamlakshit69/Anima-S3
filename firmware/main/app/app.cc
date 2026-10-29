@@ -8,6 +8,7 @@
 #include "boards/board.h"
 #include "net/ws_client.h"
 #include "net/protocol_gen.h"
+#include "sys/tools.h"
 #include "config.h"
 #include "ui/ui.h"
 #include <stdio.h>
@@ -160,6 +161,7 @@ void App::init() {
     encoder_.init(CONFIG_AUDIO_UP_RATE, 20000);
     decoder_.init(CONFIG_AUDIO_DN_RATE);
     wake_word_.init("model");
+    ToolDispatcher::init();
     Ui::get()->init();
     Ui::get()->show_state(state_);
 
@@ -288,6 +290,31 @@ void App::start_ota() {
 
 void App::ota_done() {
     // System reboot on OTA success
+}
+
+void App::on_tool_call(uint32_t turn, const char* call_id, const char* name, const char* args_json) {
+    if (turn != turn_) {
+        // Rule T7: Drop stale turn tool call
+        char res_buf[128];
+        snprintf(res_buf, sizeof(res_buf),
+                 "{\"type\":\"tool.result\",\"turn\":%u,\"id\":\"%s\",\"ok\":false,\"error\":\"stale\"}",
+                 turn, call_id ? call_id : "");
+        WsClient::send_text(res_buf);
+        return;
+    }
+
+    ToolResult res = ToolDispatcher::dispatch(name, args_json);
+    char res_buf[512];
+    if (res.ok) {
+        snprintf(res_buf, sizeof(res_buf),
+                 "{\"type\":\"tool.result\",\"turn\":%u,\"id\":\"%s\",\"ok\":true,\"result\":%s}",
+                 turn, call_id ? call_id : "", res.payload);
+    } else {
+        snprintf(res_buf, sizeof(res_buf),
+                 "{\"type\":\"tool.result\",\"turn\":%u,\"id\":\"%s\",\"ok\":false,\"error\":\"%s\"}",
+                 turn, call_id ? call_id : "", res.error);
+    }
+    WsClient::send_text(res_buf);
 }
 
 bool App::push_mic_audio(const int16_t* samples, size_t count) {

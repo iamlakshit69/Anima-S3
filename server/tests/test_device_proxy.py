@@ -69,3 +69,35 @@ async def test_device_proxy_timeout():
     res = json.loads(res_str)
     assert res["error"] == "E_TOOL_TIMEOUT"
 
+
+@pytest.mark.asyncio
+async def test_device_proxy_tool_denied():
+    cfg = Config()
+    session = DummySession()
+    reg = ToolRegistry(cfg, session)
+
+    # Calling an unknown or forbidden tool returns E_TOOL_DENIED
+    call_obj = type("Call", (), {"name": "reboot", "args": {}, "id": "call_forbidden"})
+    res_str = await reg.invoke(turn=1, call=call_obj)
+    res = json.loads(res_str)
+    assert res["error"] == "E_TOOL_DENIED"
+
+
+@pytest.mark.asyncio
+async def test_device_proxy_late_result_ignored():
+    cfg = Config(tool_timeout_ms=50)
+    session = DummySession()
+    reg = ToolRegistry(cfg, session)
+
+    reg.register_device_tools([
+        {"name": "lamp_set", "description": "Lamp", "params": {}, "risk": "safe"}
+    ])
+
+    call_obj = type("Call", (), {"name": "lamp_set", "args": {}, "id": "call_late"})
+    # Timed out call
+    res_str = await reg.invoke(turn=1, call=call_obj)
+    assert json.loads(res_str)["error"] == "E_TOOL_TIMEOUT"
+
+    # Late result arrives after timeout
+    # Must not raise or crash
+    reg.resolve("call_late", ToolResultMsg(turn=1, id="call_late", ok=True, result={"on": True}))
