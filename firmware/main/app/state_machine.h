@@ -6,9 +6,8 @@
 
 #include <stddef.h>
 #include "app/events.h"
+#include "app/app_context.h"
 #include "ui/ui.h"
-
-class AppContext;
 
 typedef void (*ActionFn)(AppContext& ctx, const Event& event);
 

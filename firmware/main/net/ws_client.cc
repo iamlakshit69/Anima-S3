@@ -105,3 +105,4 @@ uint32_t WsClient::get_next_backoff_delay_ms() {
 void WsClient::reset_backoff() {
     s_backoff_step = 0;
 }
+

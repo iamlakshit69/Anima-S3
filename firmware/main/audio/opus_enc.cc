@@ -55,3 +55,4 @@ void OpusAudioEncoder::reset() {
     }
 #endif
 }
+

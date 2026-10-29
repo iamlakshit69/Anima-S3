@@ -71,3 +71,4 @@ void ButtonDebouncer::reset() {
     ptt_down_ = false;
     ptt_duration_ms_ = 0;
 }
+

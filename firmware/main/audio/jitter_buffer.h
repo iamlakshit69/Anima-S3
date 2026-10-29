@@ -47,3 +47,4 @@ private:
     uint32_t underruns_;
     bool is_playing_;
 };
+

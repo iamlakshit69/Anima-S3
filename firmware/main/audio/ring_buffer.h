@@ -106,3 +106,4 @@ private:
     alignas(64) std::atomic<size_t> read_idx_;
     alignas(64) std::atomic<size_t> write_idx_;
 };
+

@@ -73,3 +73,4 @@ void Diagnostics::log_memory_report() {
     printf("[DIAG] Free Heap: %u bytes (Min: %u) | Free PSRAM: %u bytes | Uptime: %u s\n",
            s.free_heap_bytes, s.min_free_heap_bytes, s.free_psram_bytes, s.uptime_seconds);
 }
+

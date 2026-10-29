@@ -15,6 +15,7 @@ enum class EventType {
     NO_CREDENTIALS,
     WIFI_UP,
     WIFI_DOWN,
+    WIFI_TIMEOUT,
     HELLO_ACK,
     WS_DOWN,
     WAKE,
@@ -33,8 +34,8 @@ enum class EventType {
 
 struct Event {
     EventType type;
-    bool has_turn;
     uint32_t turn;
+    bool has_turn;
     int payload_int;
     void* payload_ptr;
 };

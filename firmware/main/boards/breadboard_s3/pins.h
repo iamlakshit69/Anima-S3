@@ -23,3 +23,4 @@
 /* Visual & Hardware Indicators */
 #define PIN_STATUS_LED         48  /* Onboard status LED */
 #define PIN_RELAY_LAMP         18  /* Optional relay control (active high, default off) */
+

@@ -29,3 +29,4 @@ public:
     static MicSelfTestResult analyze_mic_samples(const int16_t* pcm, size_t count);
     static void log_memory_report();
 };
+

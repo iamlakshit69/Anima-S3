@@ -19,3 +19,4 @@ public:
 private:
     void* state_;
 };
+

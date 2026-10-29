@@ -39,3 +39,7 @@ add_test(NAME test_state_machine_host COMMAND test_state_machine_host)
 # 6. Diagnostics & self-test
 add_executable(test_diag_host test_diag_host.cc ../main/sys/diag.cc)
 add_test(NAME test_diag_host COMMAND test_diag_host)
+
+# 7. Wake word detector test
+add_executable(test_wake_word_host test_wake_word_host.cc ../main/audio/wake_word.cc)
+add_test(NAME test_wake_word_host COMMAND test_wake_word_host)

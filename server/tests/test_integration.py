@@ -150,3 +150,77 @@ async def test_scenario_barge_in(server_port):
     finally:
         reader.cancel()
         await dev.close()
+
+
+@pytest.mark.asyncio
+async def test_scenario_reconnect(server_port):
+    url = f"ws://127.0.0.1:{server_port}/v1/device"
+    dev = FakeDevice(url=url, token="secret-test-token", device_id="esp32s3-fake-01")
+    await dev.connect()
+    ack = await dev.handshake()
+    assert ack.proto == 1
+
+    reader = asyncio.create_task(dev.reader_loop())
+    try:
+        # Turn 1
+        dev.turn = 1
+        await dev.send_json({"type": "listen.start", "turn": 1, "reason": "wake_word"})
+        pcm = generate_synthetic_speech(duration_s=0.4)
+        await dev.stream_pcm_uplink(pcm, turn=1)
+        await asyncio.sleep(0.5)
+
+        # Simulate network failure / disconnect
+        reader.cancel()
+        await dev.close()
+        await asyncio.sleep(0.2)
+
+        # Reconnect with fresh handshake carrying last_turn=1
+        dev2 = FakeDevice(url=url, token="secret-test-token", device_id="esp32s3-fake-01")
+        dev2.last_turn = 1
+        await dev2.connect()
+        ack2 = await dev2.handshake()
+        assert ack2.proto == 1
+
+        reader2 = asyncio.create_task(dev2.reader_loop())
+        try:
+            # Turn 2
+            dev2.turn = 2
+            await dev2.send_json({"type": "listen.start", "turn": 2, "reason": "wake_word"})
+            pcm2 = generate_synthetic_speech(duration_s=0.4)
+            await dev2.stream_pcm_uplink(pcm2, turn=2)
+            await asyncio.sleep(0.8)
+
+            types = [getattr(m, "type", m.get("type") if isinstance(m, dict) else None) for m in dev2.received_messages]
+            assert "listen.stop" in types
+            assert "reply" in types
+            assert len(dev2.received_audio_frames) > 0
+            for fr in dev2.received_audio_frames:
+                assert fr.turn == 2
+        finally:
+            reader2.cancel()
+            await dev2.close()
+    finally:
+        pass
+
+
+@pytest.mark.asyncio
+async def test_scenario_disconnect_mid_stream(server_port):
+    url = f"ws://127.0.0.1:{server_port}/v1/device"
+    dev = FakeDevice(url=url, token="secret-test-token", device_id="esp32s3-fake-01")
+    await dev.connect()
+    await dev.handshake()
+
+    reader = asyncio.create_task(dev.reader_loop())
+    try:
+        dev.turn = 1
+        await dev.send_json({"type": "listen.start", "turn": 1, "reason": "wake_word"})
+        # Send one audio packet then abruptly close
+        pcm = generate_synthetic_speech(duration_s=0.1)
+        # Just stream partial audio
+        await dev.stream_pcm_uplink(pcm, turn=1)
+    finally:
+        reader.cancel()
+        await dev.close()
+
+    # Allow server to process disconnect cleanly
+    await asyncio.sleep(0.3)

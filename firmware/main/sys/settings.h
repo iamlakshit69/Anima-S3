@@ -27,3 +27,4 @@ public:
 private:
     static DeviceSettings s_current;
 };
+

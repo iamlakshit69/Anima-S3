@@ -56,3 +56,4 @@ void JitterBuffer::clear() {
 bool JitterBuffer::empty() const {
     return ring_.empty();
 }
+

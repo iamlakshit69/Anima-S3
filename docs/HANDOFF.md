@@ -180,3 +180,42 @@ cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 6 passe
 
 
 
+
+
+## Entry 005 — 2026-10-29 — Phase 3 Completion (Wake word, full state machine, reconnect drills)
+
+### Done
+- **ESP-SR AFE and WakeNet wrapper**:
+  - `firmware/main/audio/wake_word.h`/`.cc`: Integrated ESP-SR AFE and WakeNet model loader. Half-duplex compliant with AEC disabled (Rule R2). Loads models from SPIFFS `model` partition (`0x620000`, 4 MB). Arms/disarms wake detection and gracefully falls back to PTT if model partition is unmounted or missing.
+  - `firmware/host_test/test_wake_word_host.cc`: Host test verifying arm/disarm, audio block feeding, reset, and model query.
+- **Table-Driven State Machine & Task Architecture**:
+  - `firmware/main/app/app_context.h`: Abstract `AppContext` interface decoupling transitions, state handling, and unit test mocks.
+  - `firmware/main/app/state_machine.h`/`.cc`: Extended table-driven state machine with 27 transitions implementing complete Architecture § 7.5 specification (boot, Wi-Fi timeout, server connection, wake word & PTT turns, listening timeout watchdog, TTS playback, barge-in interrupts, OTA updates, and disconnects).
+  - `firmware/main/app/app.h`/`.cc`: Complete FreeRTOS task architecture with core pinning (Core 1: `audio_in` pri 9, `afe_wake` pri 8, `audio_out` pri 9; Core 0: `opus_enc` pri 5, `opus_dec` pri 6). Downlink packet queuing (100 packets), 25s listening timeout watchdog, 300ms room decay tail before unmuting mic (`CONFIG_MIC_TAIL_MS`).
+  - `firmware/host_test/test_state_machine_host.cc`: Expanded host tests verifying all 27 transitions with a `MockAppContext` executing every action, invalid event rejection, and stale-turn event dropping.
+- **Reconnect & Disconnect Drills**:
+  - `server/tests/test_integration.py`: Added `test_scenario_reconnect` (client completes turn 1, disconnects, reconnects with fresh handshake carrying `last_turn=1`, completes turn 2 with all frames matching turn 2) and `test_scenario_disconnect_mid_stream` (client starts turn, sends audio, and abruptly closes socket; verifies server shuts down scope cleanly without unhandled exceptions).
+  - `tools/fake_device.py`: Verified `--scenario reconnect` end-to-end drill.
+- Updated status board in `AGENTS.md` and `Notes for agents.md`: Phase 3 checked off.
+
+### Tests run
+```sh
+cmake -S firmware/host_test -B firmware/host_test/build && ctest ... → 7/7 host tests passed (100%)
+.venv/bin/python -m pytest server/tests protocol/tests -v            → 85/85 tests passed (100%)
+```
+
+### Half-done or in progress
+- None. Phase 3 deliverables are 100% complete and accepted.
+
+### Blocked on
+- None. Ready for Phase 4.
+
+### Next agent: start here
+- Start **Phase 4: Tools, fast-path intents, endpoint tuning**.
+- Review Architecture Plan section 6.7 (Intents) and section 7.8 (Tools on the device).
+- Deliverables for Phase 4:
+  - Device tool registry (`kTools` in firmware with allowlist: `set_volume`, `set_brightness`, `lamp_set`, `get_status`).
+  - Server tool registry and policy (`server/tools.yaml` enforcement, schema validation, rate limits).
+  - Fast-path intents matching table (`intents.py`: volume, lamp, stop, time executed without LLM call).
+  - Device proxy (`DeviceProxy` resolving `tool.call` and waiting for `tool.result`).
+  - Tuning `fixed_silence_ms` using recorded utterances.

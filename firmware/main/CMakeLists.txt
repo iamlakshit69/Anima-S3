@@ -8,6 +8,7 @@ idf_component_register(
         "audio/jitter_buffer.cc"
         "audio/opus_enc.cc"
         "audio/opus_dec.cc"
+        "audio/wake_word.cc"
         "audio/cues.cc"
         "boards/breadboard_s3/board.cc"
         "net/ws_client.cc"

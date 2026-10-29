@@ -79,3 +79,4 @@ static BreadboardS3 s_board_instance;
 Board* Board::get() {
     return &s_board_instance;
 }
+

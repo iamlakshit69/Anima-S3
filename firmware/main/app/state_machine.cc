@@ -5,21 +5,63 @@
 #include "app/state_machine.h"
 #include <stddef.h>
 
-// Action callbacks
-static void act_start_wifi(AppContext&, const Event&) {}
-static void act_start_prov(AppContext&, const Event&) {}
-static void act_connect_server(AppContext&, const Event&) {}
-static void act_on_connected(AppContext&, const Event&) {}
-static void act_on_disconnect(AppContext&, const Event&) {}
-static void act_start_listening(AppContext&, const Event&) {}
-static void act_stop_uplink(AppContext&, const Event&) {}
-static void act_send_listen_end(AppContext&, const Event&) {}
-static void act_abort_turn(AppContext&, const Event&) {}
-static void act_start_playback(AppContext&, const Event&) {}
-static void act_finish_playback(AppContext&, const Event&) {}
-static void act_barge_in(AppContext&, const Event&) {}
-static void act_start_ota(AppContext&, const Event&) {}
-static void act_ota_done(AppContext&, const Event&) {}
+// Action callbacks delegating to AppContext
+static void act_start_wifi(AppContext& ctx, const Event&) {
+    ctx.connect_wifi();
+}
+
+static void act_start_prov(AppContext& ctx, const Event&) {
+    ctx.start_provisioning();
+}
+
+static void act_connect_server(AppContext& ctx, const Event&) {
+    ctx.connect_server();
+}
+
+static void act_on_connected(AppContext& ctx, const Event&) {
+    ctx.on_connected();
+}
+
+static void act_on_disconnect(AppContext& ctx, const Event&) {
+    ctx.on_disconnected();
+}
+
+static void act_start_listening(AppContext& ctx, const Event& ev) {
+    const char* reason = (ev.type == EventType::WAKE) ? "wake_word" : "button";
+    ctx.start_turn(reason);
+}
+
+static void act_stop_uplink(AppContext& ctx, const Event&) {
+    ctx.stop_uplink();
+}
+
+static void act_send_listen_end(AppContext& ctx, const Event&) {
+    ctx.send_listen_end();
+}
+
+static void act_abort_turn(AppContext& ctx, const Event&) {
+    ctx.abort_turn();
+}
+
+static void act_start_playback(AppContext& ctx, const Event&) {
+    ctx.start_playback();
+}
+
+static void act_finish_playback(AppContext& ctx, const Event&) {
+    ctx.finish_playback();
+}
+
+static void act_barge_in(AppContext& ctx, const Event&) {
+    ctx.barge_in();
+}
+
+static void act_start_ota(AppContext& ctx, const Event&) {
+    ctx.start_ota();
+}
+
+static void act_ota_done(AppContext& ctx, const Event&) {
+    ctx.ota_done();
+}
 
 static const Transition kTransitions[] = {
     // 1. Boot & Provisioning
@@ -29,6 +71,7 @@ static const Transition kTransitions[] = {
 
     // 2. Wi-Fi & WebSocket Connection
     { DeviceState::CONNECTING_WIFI, EventType::WIFI_UP, DeviceState::CONNECTING_SERVER, act_connect_server },
+    { DeviceState::CONNECTING_WIFI, EventType::WIFI_TIMEOUT, DeviceState::PROVISIONING, act_start_prov },
     { DeviceState::CONNECTING_SERVER, EventType::HELLO_ACK, DeviceState::IDLE, act_on_connected },
 
     // Reconnection on drops
@@ -44,6 +87,7 @@ static const Transition kTransitions[] = {
     // 3. Conversation Turn Cycle
     { DeviceState::IDLE, EventType::WAKE,     DeviceState::LISTENING, act_start_listening },
     { DeviceState::IDLE, EventType::PTT_DOWN, DeviceState::LISTENING, act_start_listening },
+    { DeviceState::IDLE, EventType::TAP_BARGE_IN, DeviceState::LISTENING, act_start_listening },
     { DeviceState::LISTENING, EventType::LISTEN_STOP, DeviceState::THINKING, act_stop_uplink },
     { DeviceState::LISTENING, EventType::PTT_UP,      DeviceState::LISTENING, act_send_listen_end },
     { DeviceState::LISTENING, EventType::TIMEOUT_LISTENING, DeviceState::IDLE, act_abort_turn },

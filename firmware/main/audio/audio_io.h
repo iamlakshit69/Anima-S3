@@ -18,3 +18,4 @@ public:
     static void set_mic_muted(bool muted);
     static bool is_mic_muted();
 };
+

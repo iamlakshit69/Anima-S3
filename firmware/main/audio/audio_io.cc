@@ -145,3 +145,4 @@ void AudioIO::set_mic_muted(bool muted) {
 bool AudioIO::is_mic_muted() {
     return s_mic_muted;
 }
+

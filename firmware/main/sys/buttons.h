@@ -39,3 +39,4 @@ private:
     bool ptt_down_;
     uint32_t ptt_duration_ms_;
 };
+

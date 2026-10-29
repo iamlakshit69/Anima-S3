@@ -116,3 +116,4 @@ static LedUi s_led_ui;
 Ui* Ui::get() {
     return &s_led_ui;
 }
+

@@ -52,3 +52,4 @@ const DeviceSettings& Settings::get() {
 void Settings::set_volume(uint8_t vol) {
     s_current.volume = (vol > 100) ? 100 : vol;
 }
+
